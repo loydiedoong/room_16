@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trimester 2 Math Data Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Calm Harmony (Gray/White/Blue) -->
+    <!-- Application Structure Plan: A tabbed dashboard SPA. Tabs for 'School-Wide', 'Grade-Level', 'Student Watchlist', & 'Recommendations'. This structure allows users to see the high-level summary first, then intuitively drill down into grades or student groups, rather than forcing a linear scroll. This non-linear exploration matches the user's likely task (e.g., 'How is the school doing?' -> 'How is my grade doing?' -> 'Which students need help?'). -->
+    <!-- Visualization & Content Choices: Exec Summary -> KPI Cards (HTML) -> Goal: Inform. School Proficiency T1/T2 -> Bar Chart (Chart.js) -> Goal: Change. School Growth -> Donut Chart (Chart.js) -> Goal: Inform. Domain Performance -> Horizontal Bar (Chart.js) -> Goal: Compare (strengths/weaknesses). Grade Comparison -> Grouped Bar (Chart.js) -> Goal: Compare (classrooms). Student Lists -> Interactive HTML List (JS) -> Goal: Organize/Inform. Recommendations -> HTML List -> Goal: Inform. This plan uses charts for comparisons and change, and HTML for static info, supporting the dashboard structure. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        [role="tab"] {
+            cursor: pointer;
+        }
+        [role="tab"][aria-selected="true"] {
+            border-bottom-width: 2px;
+            border-color: #3b82f6; /* blue-600 */
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        [role="tabpanel"] {
+            display: none;
+        }
+        [role="tabpanel"].active {
+            display: block;
+        }
+        .grade-button[aria-pressed="true"] {
+            background-color: #3b82f6; /* blue-600 */
+            color: #ffffff;
+        }
+        .list-toggle[aria-pressed="true"] {
+            background-color: #10b981; /* green-500 */
+            color: #ffffff;
+        }
+        .list-toggle.intervention[aria-pressed="true"] {
+            background-color: #ef4444; /* red-500 */
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+    <div class="container mx-auto max-w-7xl p-4 md:p-8">
+        <header class="mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Trimester 2 Math Data Report</h1>
+            <p class="text-lg text-gray-600">Interactive dashboard for Grades 3-5</p>
+        </header>
+
+        <nav class="mb-6 border-b border-gray-300" role="tablist" aria-label="Data Views">
+            <button role="tab" aria-selected="true" aria-controls="school-wide-panel" class="tab-button px-4 py-3 text-gray-600 hover:text-blue-600">
+                School-Wide
+            </button>
+            <button role="tab" aria-selected="false" aria-controls="grade-level-panel" class="tab-button px-4 py-3 text-gray-600 hover:text-blue-600">
+                Grade-Level
+            </button>
+            <button role="tab" aria-selected="false" aria-controls="watchlist-panel" class="tab-button px-4 py-3 text-gray-600 hover:text-blue-600">
+                Student Watchlist
+            </button>
+            <button role="tab" aria-selected="false" aria-controls="recommendations-panel" class="tab-button px-4 py-3 text-gray-600 hover:text-blue-600">
+                Recommendations
+            </button>
+        </nav>
+
+        <main>
+            <div id="school-wide-panel" role="tabpanel" class="active">
+                <p class="mb-6 text-gray-700">This dashboard provides a high-level overview of school-wide performance, including key metrics, proficiency trends, and an analysis of performance across different math standards. Use this view to understand the overall health of the math program.</p>
+                
+                <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-gray-500 font-medium mb-1">Overall Proficiency</h3>
+                        <p class="text-4xl font-bold text-blue-600">32.1%</p>
+                        <p class="text-gray-600">at or above grade level</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-gray-500 font-medium mb-1">Proficiency Change</h3>
+                        <p class="text-4xl font-bold text-red-500">-1.4 p.p.</p>
+                        <p class="text-gray-600">from Trimester 1 (33.6%)</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-gray-500 font-medium mb-1">Student Growth</h3>
+                        <p class="text-4xl font-bold text-green-600">38.8%</p>
+                        <p class="text-gray-600">met typical growth target</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-gray-500 font-medium mb-1">Students Regressing</h3>
+                        <p class="text-4xl font-bold text-yellow-500">24</p>
+                        <p class="text-gray-600">(17.9% of students)</p>
+                    </div>
+                </section>
+
+                <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Proficiency: T1 vs. T2</h3>
+                        <div class="chart-container h-80 max-h-[350px]">
+                            <canvas id="proficiencyChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Student Growth vs. Target</h3>
+                        <div class="chart-container h-80 max-h-[350px]">
+                            <canvas id="growthChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">School-Wide Domain Performance</h3>
+                    <div class="chart-container h-96 max-h-[400px]">
+                        <canvas id="domainChart"></canvas>
+                    </div>
+                </section>
+            </div>
+
+            <div id="grade-level-panel" role="tabpanel">
+                <p class="mb-6 text-gray-700">Explore performance by grade level. Select a grade to see a comparison of its classrooms and a breakdown of proficiency by math domain. This helps identify which grades and classes need the most support and in which specific areas.</p>
+                <div class="flex flex-wrap gap-4 mb-6">
+                    <button class="grade-button text-lg font-medium px-6 py-3 rounded-lg bg-white shadow-sm hover:bg-gray-50" data-grade="3" aria-pressed="false">
+                        Grade 3
+                    </button>
+                    <button class="grade-button text-lg font-medium px-6 py-3 rounded-lg bg-white shadow-sm hover:bg-gray-50" data-grade="4" aria-pressed="false">
+                        Grade 4
+                    </button>
+                    <button class="grade-button text-lg font-medium px-6 py-3 rounded-lg bg-white shadow-sm hover:bg-gray-50" data-grade="5" aria-pressed="false">
+                        Grade 5
+                    </button>
+                </div>
+                
+                <div id="grade-level-content">
+                    <p class="text-center text-gray-500 text-lg p-8">Select a grade above to view details.</p>
+                </div>
+            </div>
+
+            <div id="watchlist-panel" role="tabpanel">
+                <p class="mb-6 text-gray-700">This section provides actionable lists of students for celebration or intervention. Use the toggles to switch between students who showed significant growth (even if below level) and those who are regressing. You can also filter by grade.</p>
+                
+                <div class="flex flex-wrap items-center gap-4 mb-6">
+                    <button id="growth-toggle" class="list-toggle text-base font-medium px-5 py-2 rounded-full bg-white shadow-sm" aria-pressed="true">
+                        &#10024; Significant Growth (15)
+                    </button>
+                    <button id="intervention-toggle" class="list-toggle intervention text-base font-medium px-5 py-2 rounded-full bg-white shadow-sm" aria-pressed="false">
+                        &#9888; Intervention (24)
+                    </button>
+                    <select id="grade-filter" class="ml-auto p-2 rounded-lg border border-gray-300 bg-white shadow-sm">
+                        <option value="all">All Grades</option>
+                        <option value="3">Grade 3</option>
+                        <option value="4">Grade 4</option>
+                        <option value="5">Grade 5</option>
+                    </select>
+                </div>
+
+                <div id="student-list-container" class="bg-white p-6 rounded-lg shadow-md">
+                </div>
+            </div>
+
+            <div id="recommendations-panel" role="tabpanel">
+                <p class="mb-6 text-gray-700">Based on the data analysis, the following actions are recommended to address school-wide and grade-specific challenges. These points can guide data meetings and strategic planning for the next trimester.</p>
+                
+                <ul class="space-y-4">
+                    <li class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-blue-600 mb-2">1. School-Wide Focus on Algebra</h3>
+                        <p class="text-gray-700">The data consistently shows a school-wide gap in "Algebra and Algebraic Thinking" (28.4% proficient). I recommend a vertical team meeting (Grades 3-5) to review curriculum and instructional strategies for this domain.</p>
+                    </li>
+                    <li class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-blue-600 mb-2">2. Grade 4 Systemic Review</h3>
+                        <p class="text-gray-700">The 4th-grade data remains a critical concern. While the regression numbers are lower, proficiency is still below 25% in *all four domains*. The recommendation for an urgent 4th-Grade data meeting stands.</p>
+                    </li>
+                    <li class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-blue-600 mb-2">3. Review Regressing Students</h3>
+                        <p class="text-gray-700">All grade-level teams must review the **24 students** identified on the corrected list to create or update intervention plans.</p>
+                    </li>
+                    <li class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-blue-600 mb-2">4. Leverage 5th Grade Strength</h3>
+                        <p class="text-gray-700">The 5th Grade team, particularly Ms. Long's class, shows strong results in "Number and Operations" (50.0% proficient). We should have them share successful strategies with other grade levels.</p>
+                    </li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const allData = {
+            school: {
+                proficiency: { T1: 33.6, T2: 32.1 },
+                growth: { met: 38.8, notMet: 100 - 38.8 },
+                domains: [
+                    { name: 'Number and Operations', proficient: 38.8 },
+                    { name: 'Measurement and Data', proficient: 30.6 },
+                    { name: 'Geometry', proficient: 29.9 },
+                    { name: 'Algebra and Algebraic Thinking', proficient: 28.4 },
+                ]
+            },
+            grades: {
+                "3": {
+                    summary: "Both 3rd-grade classes show strong growth. Ms. Griffin's class shows exceptional growth (57.1% met target) and a significant 12.3 p.p. increase in proficiency. Ms. Doong's class started with higher proficiency but saw a slight dip.",
+                    classes: [
+                        { name: 'Doong', proficiency: 45.0, growth: 45.0 },
+                        { name: 'Griffin', proficiency: 33.3, growth: 57.1 },
+                    ],
+                    domains: [
+                        { name: 'Number and Operations', proficient: 43.9 },
+                        { name: 'Algebra and Algebraic Thinking', proficient: 39.0 },
+                        { name: 'Measurement and Data', proficient: 29.3 },
+                        { name: 'Geometry', proficient: 41.5 },
+                    ]
+                },
+                "4": {
+                    summary: "Both classes still struggle with low proficiency (under 15%) and saw a decline from T1. Ms. Sheiring's class now shows a higher growth rate (31.8% met target) compared to Ms. Sutter's (20.0%). The number of regressing students in this grade is now known to be 8.",
+                    classes: [
+                        { name: 'Sheiring', proficiency: 13.6, growth: 31.8 },
+                        { name: 'Sutter', proficiency: 12.0, growth: 20.0 },
+                    ],
+                    domains: [
+                        { name: 'Number and Operations', proficient: 23.4 },
+                        { name: 'Algebra and Algebraic Thinking', proficient: 14.9 },
+                        { name: 'Measurement and Data', proficient: 23.4 },
+                        { name: 'Geometry', proficient: 12.8 },
+                    ]
+                },
+                "5": {
+                    summary: "5th grade shows a clear divide. Ms. Long's class has the highest proficiency in the school (50.0%) and solid growth (40.9% met target). Ms. Lopez's class struggles with both low proficiency (30.4%) and low growth (34.8% met target).",
+                    classes: [
+                        { name: 'Long', proficiency: 50.0, growth: 40.9 },
+                        { name: 'Lopez', proficiency: 30.4, growth: 34.8 },
+                    ],
+                    domains: [
+                        { name: 'Number and Operations', proficient: 50.0 },
+                        { name: 'Algebra and Algebraic Thinking', proficient: 31.8 },
+                        { name: 'Measurement and Data', proficient: 38.6 },
+                        { name: 'Geometry', proficient: 36.4 },
+                    ]
+                }
+            },
+            studentLists: {
+                growth: [
+                    { name: 'De Guzman, Joachim Uriel', teacher: 'Lopez', grade: 5, value: '905.0%' },
+                    { name: 'Htet, Zwe Di Par', teacher: 'Griffin', grade: 3, value: '216.0%' },
+                    { name: 'Ferrer Castrillo, Kristal', teacher: 'Sheiring', grade: 4, value: '188.0%' },
+                    { name: 'Hernandez Gomez, Chelsea', teacher: 'Lopez', grade: 5, value: '183.0%' },
+                    { name: 'Regado, Scarlett Heart', teacher: 'Griffin', grade: 3, value: '163.0%' },
+                    { name: 'Chang, Reginald James', teacher: 'Sheiring', grade: 4, value: '163.0%' },
+                    { name: 'Catiis, Rayliegh', teacher: 'Griffin', grade: 3, value: '>150%' },
+                    { name: 'Lingstuyl Gonzalez, Edward', teacher: 'Griffin', grade: 3, value: '>150%' },
+                    { name: 'Mendez Alvarez, Mathias Arturo', teacher: 'Sutter', grade: 4, value: '>150%' },
+                    { name: 'De Jesus, Amira Gabrielle', teacher: 'Sutter', grade: 4, value: '>150%' },
+                    { name: 'Khanouf, Charbel', teacher: 'Sheiring', grade: 4, value: '>150%' },
+                    { name: 'Duquilla, Justin Reese', teacher: 'Long', grade: 5, value: '>150%' },
+                    { name: 'Henkle Escalante, Adrien', teacher: 'Long', grade: 5, value: '>150%' },
+                    { name: 'Oo, Pyae', teacher: 'Lopez', grade: 5, value: '>150%' },
+                    { name: 'Lozano Camacho, Marcus', teacher: 'Doong', grade: 3, value: '>150%' },
+                ],
+                intervention: [
+                    { name: 'Chen, Eason', teacher: 'Griffin', grade: 3 },
+                    { name: 'Martinez, Emiliano', teacher: 'Griffin', grade: 3 },
+                    { name: 'Rojas Lara, Alondra', teacher: 'Griffin', grade: 3 },
+                    { name: 'Salazar Solares, Jose', teacher: 'Doong', grade: 3 },
+                    { name: 'Alvarado Reyes, Alexa', teacher: 'Sheiring', grade: 4 },
+                    { name: 'Campos Castillo, Nicole', teacher: 'Sutter', grade: 4 },
+                    { name: 'Gramajo Cifuentes, Angelica Milagros', teacher: 'Sutter', grade: 4 },
+                    { name: 'Gutierrez, Victoria', teacher: 'Sheiring', grade: 4 },
+                    { name: 'Laxa, Dominic James', teacher: 'Sheiring', grade: 4 },
+                    { name: 'Ocampo, Jham Paola', teacher: 'Sheiring', grade: 4 },
+                    { name: 'Pang, Zoey', teacher: 'Sutter', grade: 4 },
+                    { name: 'Quintero, Elijah', teacher: 'Sheiring', grade: 4 },
+                    { name: 'Alvarado, Mia', teacher: 'Lopez', grade: 5 },
+                    { name: 'Barreda Reyes, Nelson', teacher: 'Long', grade: 5 },
+                    { name: 'Catanyag, Anzel Jeric', teacher: 'Lopez', grade: 5 },
+                    { name: 'Cornejo Segovia, Danya', teacher: 'Lopez', grade: 5 },
+                    { name: 'Di Miceli Garcia, Mia', teacher: 'Lopez', grade: 5 },
+                    { name: 'Ferrer Castrillo, Ashlet', teacher: 'Long', grade: 5 },
+                    { name: 'Htet, Thwin Moe', teacher: 'Lopez', grade: 5 },
+                    { name: 'Khanouf, Giovanni', teacher: 'Lopez', grade: 5 },
+                    { name: 'Resendiz, Andrew', teacher: 'Lopez', grade: 5 },
+                    { name: 'Sarillana, Marc Anthony', teacher: 'Lopez', grade: 5 },
+                    { name: 'Sitt, John', teacher: 'Long', grade: 5 },
+                    { name: 'Soto Aguilar, Victoria', teacher: 'Long', grade: 5 },
+                ]
+            }
+        };
+
+        let charts = {};
+
+        function renderProficiencyChart() {
+            const ctx = document.getElementById('proficiencyChart').getContext('2d');
+            charts.proficiency?.destroy();
+            charts.proficiency = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Trimester 1', 'Trimester 2'],
+                    datasets: [{
+                        label: '% Proficiency',
+                        data: [allData.school.proficiency.T1, allData.school.proficiency.T2],
+                        backgroundColor: ['#a5b4fc', '#4f46e5'],
+                        borderColor: ['#818cf8', '#312e81'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: value => value + '%'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: context => `${context.dataset.label}: ${context.formattedValue}%`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderGrowthChart() {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            charts.growth?.destroy();
+            charts.growth = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Met Typical Growth', 'Did Not Meet Growth'],
+                    datasets: [{
+                        data: [allData.school.growth.met, allData.school.growth.notMet],
+                        backgroundColor: ['#10b981', '#f3f4f6'],
+                        borderColor: ['#059669', '#e5e7eb'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: context => `${context.label}: ${context.formattedValue}%`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDomainChart() {
+            const ctx = document.getElementById('domainChart').getContext('2d');
+            const sortedDomains = [...allData.school.domains].sort((a, b) => a.proficient - b.proficient);
+            charts.domain?.destroy();
+            charts.domain = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedDomains.map(d => d.name),
+                    datasets: [{
+                        label: '% Proficient',
+                        data: sortedDomains.map(d => d.proficient),
+                        backgroundColor: '#60a5fa',
+                        borderColor: '#2563eb',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: value => value + '%'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: context => `${context.dataset.label}: ${context.formattedValue}%`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderGradeCharts(grade) {
+            const gradeData = allData.grades[grade];
+            const contentEl = document.getElementById('grade-level-content');
+            
+            contentEl.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <p class="text-gray-700">${gradeData.summary}</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Class Comparison: Grade ${grade}</h3>
+                        <div class="chart-container h-96 max-h-[400px]">
+                            <canvas id="gradeClassChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Domain Performance: Grade ${grade}</h3>
+                        <div class="chart-container h-96 max-h-[400px]">
+                            <canvas id="gradeDomainChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const classCtx = document.getElementById('gradeClassChart').getContext('2d');
+            charts.gradeClass?.destroy();
+            charts.gradeClass = new Chart(classCtx, {
+                type: 'bar',
+                data: {
+                    labels: gradeData.classes.map(c => c.name),
+                    datasets: [
+                        {
+                            label: '% Proficiency',
+                            data: gradeData.classes.map(c => c.proficiency),
+                            backgroundColor: '#60a5fa',
+                        },
+                        {
+                            label: '% Met Growth',
+                            data: gradeData.classes.map(c => c.growth),
+                            backgroundColor: '#34d399',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: value => value + '%' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: { callbacks: { label: context => `${context.dataset.label}: ${context.formattedValue}%` } }
+                    }
+                }
+            });
+            
+            const domainCtx = document.getElementById('gradeDomainChart').getContext('2d');
+            const sortedDomains = [...gradeData.domains].sort((a, b) => a.proficient - b.proficient);
+            charts.gradeDomain?.destroy();
+            charts.gradeDomain = new Chart(domainCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedDomains.map(d => d.name),
+                    datasets: [{
+                        label: '% Proficient',
+                        data: sortedDomains.map(d => d.proficient),
+                        backgroundColor: '#a5b4fc',
+                        borderColor: '#4f46e5',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: value => value + '%' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: context => `${context.dataset.label}: ${context.formattedValue}%` } }
+                    }
+                }
+            });
+        }
+        
+        function setupTabs() {
+            const tabs = document.querySelectorAll('[role="tab"]');
+            const panels = document.querySelectorAll('[role="tabpanel"]');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+                    tab.setAttribute('aria-selected', 'true');
+                    
+                    const panelId = tab.getAttribute('aria-controls');
+                    panels.forEach(p => p.classList.remove('active'));
+                    document.getElementById(panelId).classList.add('active');
+                    
+                    if (panelId === 'school-wide-panel') {
+                        renderProficiencyChart();
+                        renderGrowthChart();
+                        renderDomainChart();
+                    }
+                });
+            });
+        }
+        
+        function setupGradeNav() {
+            const buttons = document.querySelectorAll('.grade-button');
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    buttons.forEach(b => b.setAttribute('aria-pressed', 'false'));
+                    button.setAttribute('aria-pressed', 'true');
+                    const grade = button.dataset.grade;
+                    renderGradeCharts(grade);
+                });
+            });
+        }
+
+        function setupWatchlist() {
+            const growthToggle = document.getElementById('growth-toggle');
+            const interventionToggle = document.getElementById('intervention-toggle');
+            const gradeFilter = document.getElementById('grade-filter');
+
+            function renderList() {
+                const listType = growthToggle.getAttribute('aria-pressed') === 'true' ? 'growth' : 'intervention';
+                const filter = gradeFilter.value;
+                renderStudentList(listType, filter);
+            }
+            
+            growthToggle.addEventListener('click', () => {
+                growthToggle.setAttribute('aria-pressed', 'true');
+                interventionToggle.setAttribute('aria-pressed', 'false');
+                renderList();
+            });
+            
+            interventionToggle.addEventListener('click', () => {
+                interventionToggle.setAttribute('aria-pressed', 'true');
+                growthToggle.setAttribute('aria-pressed', 'false');
+                renderList();
+            });
+
+            gradeFilter.addEventListener('change', renderList);
+
+            renderList();
+        }
+
+        function renderStudentList(listType, gradeFilter) {
+            const container = document.getElementById('student-list-container');
+            const list = allData.studentLists[listType];
+            
+            const filteredList = list.filter(student => 
+                gradeFilter === 'all' || student.grade.toString() === gradeFilter
+            );
+
+            let headerText, headerColor, valueText;
+            if (listType === 'growth') {
+                headerText = `Students with Significant Growth (${filteredList.length})`;
+                headerColor = 'text-green-600';
+                valueText = 'Growth Pct';
+            } else {
+                headerText = `Students for Intervention (${filteredList.length})`;
+                headerColor = 'text-red-600';
+                valueText = 'Teacher';
+            }
+            
+            let html = `<h3 class="text-xl font-semibold mb-4 ${headerColor}">${headerText}</h3>`;
+            
+            if (filteredList.length === 0) {
+                html += `<p class="text-gray-500">No students found for this filter.</p>`;
+                container.innerHTML = html;
+                return;
+            }
+
+            html += '<div class="overflow-x-auto">';
+            html += '<table class="min-w-full divide-y divide-gray-200">';
+            html += '<thead class="bg-gray-50">';
+            html += '<tr>';
+            html += '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>';
+            html += `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${listType === 'growth' ? 'Details' : 'Teacher'}</th>`;
+            html += '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>';
+            html += '</tr></thead>';
+            html += '<tbody class="bg-white divide-y divide-gray-200">';
+            
+            filteredList.forEach(student => {
+                html += '<tr>';
+                html += `<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.name}</td>`;
+                if (listType === 'growth') {
+                    html += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.teacher} (${student.value})</td>`;
+                } else {
+                    html += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.teacher}</td>`;
+                }
+                html += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.grade}</td>`;
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupTabs();
+            setupGradeNav();
+            setupWatchlist();
+            
+            renderProficiencyChart();
+            renderGrowthChart();
+            renderDomainChart();
+        });
+
+    </script>
+</body>
+</html>
