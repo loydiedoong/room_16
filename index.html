@@ -2,8 +2,8 @@
 <!-- Application Structure Plan: A dashboard-style SPA with a left-hand navigation. This structure is designed for different user roles (Leadership vs. Teachers). Leadership can use the 'School-Wide Dashboard' (default) for a high-level overview. Grade-Level leads can use 'Grade-Level Deep Dives' to compare classes. Teachers can use the 'Student Action Lists' page to filter for their specific students who need intervention or celebration. This is more usable than a linear report as it allows users to immediately access the information relevant to their role and task. -->
 <!-- Visualization & Content Choices:
 - School-Wide KPIs: Inform -> Dynamic Stat Cards (HTML/Tailwind) -> Shows high-level metrics from Exec Summary.
-- School-Wide Proficiency (Fall vs Winter): Show Change -> Bar Chart (Chart.js) -> Clearly visualizes the 8.8 p.p. gain.
-- School-Wide Growth Breakdown: Show Proportions -> Donut Chart (Chart.js) -> Shows ratio of Met Annual (19.3%), Regressed (21.5%), and Grew/Below (59.2%).
+- School-Wide Proficiency (Fall vs Winter): Show Change -> Bar Chart (Chart.js) -> Clearly visualizes the 8.2 p.p. gain.
+- School-Wide Growth Breakdown: Show Proportions -> Donut Chart (Chart.js) -> Shows ratio of Met Annual (16.3%), Regressed (25.2%), and Grew/Below (58.5%).
 - Domain Performance (School & Grade): Compare -> Horizontal Bar Chart (Chart.js) -> Best for comparing the 4 domains and identifying strengths/weaknesses. Dynamically updates on the Grade-Level page.
 - Teacher Comparisons: Compare -> Grouped Bar Chart (Chart.js) -> Directly compares teachers on % Met Growth and % Regressed.
 - Student Lists: Organize/Inform -> Interactive HTML Table -> On-click tabs (Celebration/Intervention) and dropdown filters (Grade, Teacher) allow teachers to create actionable lists for their own class.
@@ -108,34 +108,39 @@
     </div>
 
     <script>
-        // --- DATA STORE (from winter_iready_math_report.md) ---
+        // --- DATA STORE (from user-provided text) ---
         const reportData = {
             schoolWide: {
-                proficiency: { fall: 22.3, winter: 31.1 },
-                growth: { metAnnual: 19.3, regressed: 21.5, other: (100 - 19.3 - 21.5).toFixed(1) },
+                proficiency: { fall: 20.7, winter: 28.9 },
+                growth: { metAnnual: 16.3, regressed: 25.2, other: (100 - 16.3 - 25.2).toFixed(1) },
                 domains: [
-                    { name: 'Number and Operations', pct: 44.3 },
-                    { name: 'Algebra and Algebraic Thinking', pct: 33.1 },
-                    { name: 'Measurement and Data', pct: 29.5 },
-                    { name: 'Geometry', pct: 26.8 },
-                ]
+                    { name: 'Number and Operations', pct: 43.4 },
+                    { name: 'Algebra and Algebraic Thinking', pct: 35.1 },
+                    { name: 'Measurement and Data', pct: 30.1 },
+                    { name: 'Geometry', pct: 25.8 },
+                ].sort((a,b) => b.pct - a.pct)
             },
             gradeData: {
                 3: {
-                    summary: "3rd grade shows strong proficiency gains, particularly in Mr. Griffin's class (+15.5 p.p.). 27.7% of 3rd graders have already met their full annual growth target. Both classes show a very low stagnation rate.",
+                    summary: "The 3rd-grade team shows the most promising growth profile. Mr. Griffin's class, starting with only 4.8% proficiency, made a remarkable 19.0 point jump to 23.8%. Mr. Doong's class, while showing a smaller proficiency gain (+8.7 p.p.), had an impressively low regression rate of only 4.3%. The most telling data is the domain comparison: Mr. Doong's class is outperforming in 'Algebra and Algebraic Thinking' (47.8% proficient), while both classes are nearly tied in 'Number and Operations'. This suggests Mr. Doong's instruction in Algebra is highly effective. Both classes are performing below the grade-level average in 'Geometry'.",
                     domains: [
-                        { name: 'Number and Operations', pct: 46.8 },
-                        { name: 'Algebra and Algebraic Thinking', pct: 40.4 },
-                        { name: 'Measurement and Data', pct: 31.9 },
-                        { name: 'Geometry', pct: 23.4 },
+                        { name: 'Number and Operations', pct: 47.0 },
+                        { name: 'Algebra and Algebraic Thinking', pct: 40.0 },
+                        { name: 'Measurement and Data', pct: 32.0 },
+                        { name: 'Geometry', pct: 23.0 },
                     ].sort((a,b) => b.pct - a.pct),
+                    teacherDomains: {
+                        labels: ["N&O", "Algebra", "M&D", "Geo"],
+                        doong: { name: "Doong (47.8% Alg)", data: [43.5, 47.8, 30, 22] },
+                        griffin: { name: "Griffin (33.3% Alg)", data: [42.9, 33.3, 33, 29] }
+                    },
                     teachers: [
                         { name: 'Doong', students: 23, profFall: 17.4, profWinter: 26.1, profChange: 8.7, metGrowth: 26.1, regressed: 4.3 },
-                        { name: 'Griffin', students: 24, profFall: 4.2, profWinter: 19.7, profChange: 15.5, metGrowth: 29.2, regressed: 4.2 },
+                        { name: 'Griffin', students: 21, profFall: 4.8, profWinter: 23.8, profChange: 19.0, metGrowth: 23.8, regressed: 19.0 },
                     ]
                 },
                 4: {
-                    summary: "4th grade shows moderate growth. Ms. Sutter's class saw a stronger increase in proficiency (+9.1 p.p.). Only 13.3% of students have met their annual target. Both classes have a high number of students who are stagnating or regressing (30.4% and 27.3%), which is a key area for concern.",
+                    summary: "The 4th-grade data presents a significant challenge. Both classes are struggling with high rates of stagnation or regression, at 30.4% (Sheiring) and 27.3% (Sutter). This means nearly 1 in 3 students in 4th grade lost ground. While Ms. Sutter's class saw a better proficiency gain (+9.1 p.p.), the overall picture is one of stalled momentum. Only 13.3% of students in the grade have met their annual growth target. This grade level requires the most urgent review of instructional practices and intervention models, as a large number of students are not responding to the current program.",
                     domains: [
                         { name: 'Number and Operations', pct: 48.9 },
                         { name: 'Algebra and Algebraic Thinking', pct: 35.6 },
@@ -148,7 +153,7 @@
                     ]
                 },
                 5: {
-                    summary: "5th grade shows the lowest overall growth, with only 10.9% of students meeting their annual target. Ms. Lopez's class has a very high rate of stagnant/regressed students (47.4%), indicating an urgent need for intervention. Ms. Long's class shows higher proficiency (33.3%) but still has over 25% of students stagnating.",
+                    summary: "5th grade shows the lowest overall growth and the most alarming classroom-level discrepancy. Ms. Lopez's class is in a critical state, with nearly half of the students (47.4%) showing zero or negative growth. This regression rate is an outlier for the entire school and demands immediate, targeted intervention. In contrast, Ms. Long's class has the highest proficiency in the grade (33.3%) but is still struggling to move students, with only 7.4% meeting their annual growth target. This suggests her proficient students are maintaining, but her below-level students are stuck.",
                     domains: [
                         { name: 'Number and Operations', pct: 39.1 },
                         { name: 'Algebra and Algebraic Thinking', pct: 26.1 },
@@ -168,14 +173,10 @@
                     { name: 'Maldonado de Leon, Jairo', teacher: 'Doong', grade: 3, growth: 33 },
                     { name: 'Bosheh, Naya', teacher: 'Doong', grade: 3, growth: 30 },
                     { name: 'Estrada, Abraham', teacher: 'Doong', grade: 3, growth: 28 },
-                    { name: 'Chantharath, Kaylee', teacher: 'Griffin', grade: 3, growth: 35 },
+                    { name: 'Regado, Scarlett Heart', teacher: 'Griffin', grade: 3, growth: 44 },
+                    { name: 'Catiis, Rayliegh', teacher: 'Griffin', grade: 3, growth: 39 },
                     { name: 'Lingstuyl Gonzalez, Edward', teacher: 'Griffin', grade: 3, growth: 39 },
-                    { name: 'Martinez, Emiliano', teacher: 'Griffin', grade: 3, growth: 29 },
-                    { name: 'Ochoa, Ximena', teacher: 'Griffin', grade: 3, growth: 20 },
-                    { name: 'Padayhag, Selyna', teacher: 'Griffin', grade: 3, growth: 28 },
-                    { name: 'Renteria, Axel', teacher: 'Griffin', grade: 3, growth: 31 },
-                    { name: 'Rojas, Joshua', teacher: 'Griffin', grade: 3, growth: 24 },
-                    { name: 'Zarate-Pineda, Christopher', teacher: 'Griffin', grade: 3, growth: 27 },
+                    { name: 'Cifuentes Barrios, Giovanni', teacher: 'Griffin', grade: 3, growth: 32 },
                     { name: 'Ferrer Castrillo, Kristal', teacher: 'Sheiring', grade: 4, growth: 45 },
                     { name: 'Chang, Reginald James', teacher: 'Sheiring', grade: 4, growth: 39 },
                     { name: 'Khanouf, Charbel', teacher: 'Sheiring', grade: 4, growth: 32 },
@@ -184,7 +185,10 @@
                 ],
                 intervention: [
                     { name: 'Salazar Solares, Jose', teacher: 'Doong', grade: 3, growth: 0 },
-                    { name: 'Silva Sousa, Rianny', teacher: 'Griffin', grade: 3, growth: -9 },
+                    { name: 'Martinez, Emiliano', teacher: 'Griffin', grade: 3, growth: -16 },
+                    { name: 'Moguel Ortega, Skylar', teacher: 'Griffin', grade: 3, growth: -12 },
+                    { name: 'Bolanos, Victoria', teacher: 'Griffin', grade: 3, growth: -3 },
+                    { name: 'Chen, Eason', teacher: 'Griffin', grade: 3, growth: -1 },
                     { name: 'Montenegro, John Kieffer', teacher: 'Sheiring', grade: 4, growth: -19 },
                     { name: 'Racines, Kyann', teacher: 'Sheiring', grade: 4, growth: -12 },
                     { name: 'Alvarado Reyes, Alexa', teacher: 'Sheiring', grade: 4, growth: -12 },
@@ -217,10 +221,9 @@
                 ]
             },
             recommendations: [
-                { title: "School-Wide Focus on Geometry", text: "The data consistently shows 'Geometry' as the weakest domain across all three grade levels (26.8% proficiency). I recommend a vertical team meeting (Grades 3-5) to review curriculum pacing and instructional strategies for this domain." },
-                { title: "Address Stagnation/Regression", text: "The 32 students identified as stagnating or regressing (21.5% of the cohort) need immediate review. This is particularly urgent in 5th grade (Ms. Lopez's class) and 4th grade (both classes), where rates were highest." },
-                { title: "Leverage 3rd Grade Growth", text: "The 3rd-grade team showed the highest rate of students meeting their full annual growth target (27.7%). We should have them share successful strategies and routines with the 4th and 5th-grade teams." },
-                { title: "Analyze High-Growth Students", text: "The 19 students in the 'Significant Growth (Below Level)' list are responding to instruction. Teachers should review these students to identify what strategies are working and apply them to other students." },
+                { title: "Address Stagnation/Regression", text: "The 34 students identified as stagnating or regressing (25.2% of the cohort) need immediate review. This is particularly urgent in 5th grade (Ms. Lopez's class) and 4th grade (both classes), where rates were highest." },
+                { title: "Leverage 3rd Grade Growth", text: "The 3rd-grade team showed the highest rate of students meeting their full annual growth target (25.0%). We should have them share successful strategies and routines with the 4th and 5th-grade teams." },
+                { title: "Analyze High-Growth Students", text: "The 14 students in the 'Significant Growth (Below Level)' list are responding to instruction. Teachers should review these students to identify what strategies are working and apply them to other students." },
             ]
         };
 
@@ -268,10 +271,17 @@
                                 if (label) {
                                     label += ': ';
                                 }
-                                let value = context.parsed;
-                                if (context.parsed.y !== null) value = context.parsed.y;
-                                if (context.parsed.x !== null) value = context.parsed.x;
-                                label += value.toFixed(1) + '%';
+                                let value;
+                                if (context.parsed && context.parsed.y !== null && context.parsed.y !== undefined) {
+                                    value = context.parsed.y;
+                                } else if (context.parsed && context.parsed.x !== null && context.parsed.x !== undefined) {
+                                    value = context.parsed.x;
+                                } else if (context.raw) {
+                                    value = context.raw;
+                                } else {
+                                    value = 0;
+                                }
+                                label += parseFloat(value).toFixed(1) + '%';
                                 return label;
                             }
                         }
@@ -325,7 +335,7 @@
 
             const html = `
                 <h1 class="text-3xl font-bold mb-2">School-Wide Dashboard</h1>
-                <p class="text-lg text-neutral-600 mb-6">This section summarizes data for all 149 students who completed both diagnostics.</p>
+                <p class="text-lg text-neutral-600 mb-6">This section summarizes data for all 135 students who completed both diagnostics.</p>
                 
                 <!-- KPI Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -339,12 +349,12 @@
                     <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
                         <h3 class="text-sm font-medium text-neutral-500">Met Full Annual Growth</h3>
                         <p class="text-4xl font-bold text-green-600">${data.growth.metAnnual}%</p>
-                        <p class="text-sm text-neutral-500">29 out of 149 students</p>
+                        <p class="text-sm text-neutral-500">22 out of 135 students</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
                         <h3 class="text-sm font-medium text-neutral-500">Stagnant or Regressed</h3>
                         <p class="text-4xl font-bold text-red-600">${data.growth.regressed}%</p>
-                        <p class="text-sm text-neutral-500">32 out of 149 students</p>
+                        <p class="text-sm text-neutral-500">34 out of 135 students</p>
                     </div>
                 </div>
 
@@ -361,7 +371,7 @@
                         <div class="chart-container" style="height: 300px;"><canvas id="schoolDomainChart"></canvas></div>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200 lg:col-span-5">
-                        <h3 class="text-lg font-semibold mb-4">Student Growth Breakdown (N=149)</h3>
+                        <h3 class="text-lg font-semibold mb-4">Student Growth Breakdown (N=135)</h3>
                         <p class="text-sm text-neutral-600 mb-4">This chart shows the distribution of student growth against their full annual target.</p>
                         <div class="chart-container" style="height: 350px; max-height: 400px;"><canvas id="schoolGrowthChart"></canvas></div>
                     </div>
@@ -447,10 +457,31 @@
             Object.values(charts).forEach(chart => chart.destroy());
             charts = {};
 
+            let grade3ChartsHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
+                    <h3 class="text-lg font-semibold mb-4">Grade 3 Domain Performance (Overall)</h3>
+                    <p class="text-sm text-neutral-600 mb-4">This chart shows the proficiency rate for all students in Grade 3.</p>
+                    <div class="chart-container"><canvas id="gradeDomainChart"></canvas></div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
+                    <h3 class="text-lg font-semibold mb-4">Grade 3 Domain Performance (Teacher)</h3>
+                    <p class="text-sm text-neutral-600 mb-4">This chart directly compares domain proficiency between Mr. Doong and Mr. Griffin.</p>
+                    <div class="chart-container"><canvas id="gradeDomainTeacherChart"></canvas></div>
+                </div>
+            `;
+            
+            let otherGradesChartHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
+                    <h3 class="text-lg font-semibold mb-4">Grade ${grade} Domain Performance</h3>
+                    <p class="text-sm text-neutral-600 mb-4">This chart shows the proficiency rate for each math domain for all students in this grade.</p>
+                    <div class="chart-container"><canvas id="gradeDomainChart"></canvas></div>
+                </div>
+            `;
+
             const html = `
                 <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200 mb-6">
                     <h3 class="text-xl font-semibold mb-2">Grade ${grade} Summary</h3>
-                    <p class="text-neutral-700">${data.summary}</p>
+                    <p class="text-neutral-700 leading-relaxed">${data.summary}</p>
                 </div>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -459,11 +490,9 @@
                         <p class="text-sm text-neutral-600 mb-4">This chart compares the percentage of students who met their full annual growth target against those who regressed.</p>
                         <div class="chart-container"><canvas id="teacherCompareChart"></canvas></div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
-                        <h3 class="text-lg font-semibold mb-4">Grade ${grade} Domain Performance</h3>
-                        <p class="text-sm text-neutral-600 mb-4">This chart shows the proficiency rate for each math domain for all students in this grade.</p>
-                        <div class="chart-container"><canvas id="gradeDomainChart"></canvas></div>
-                    </div>
+                    
+                    ${grade == 3 ? grade3ChartsHTML : otherGradesChartHTML}
+                    
                 </div>
             `;
             document.getElementById('grade-content').innerHTML = html;
@@ -488,17 +517,54 @@
                 }, { scales: { x: { grid: { display: false } }, y: { max: 50 } } }
             );
 
-            charts.gradeDomainChart = createChart(
-                document.getElementById('gradeDomainChart').getContext('2d'), 'bar',
-                {
-                    labels: data.domains.map(d => d.name),
-                    datasets: [{
-                        label: '% Proficient',
-                        data: data.domains.map(d => d.pct),
-                        backgroundColor: '#3b82f6',
-                    }]
-                }, { indexAxis: 'y', scales: { x: { max: 60, ticks: { callback: v => v + '%' } }, y: { ticks: { autoSkip: false } } }, plugins: { legend: { display: false } } }
-            );
+            // Conditional Chart for Domains
+            if (grade == 3 && data.teacherDomains) {
+                // Chart 1: Grade 3 Average
+                charts.gradeDomainChart = createChart(
+                    document.getElementById('gradeDomainChart').getContext('2d'), 'bar',
+                    {
+                        labels: data.domains.map(d => d.name),
+                        datasets: [{
+                            label: '% Proficient',
+                            data: data.domains.map(d => d.pct),
+                            backgroundColor: '#3b82f6',
+                        }]
+                    }, { indexAxis: 'y', scales: { x: { max: 60, ticks: { callback: v => v + '%' } }, y: { ticks: { autoSkip: false } } }, plugins: { legend: { display: false } } }
+                );
+                
+                // Chart 2: Teacher Comparison
+                charts.gradeDomainTeacherChart = createChart(
+                    document.getElementById('gradeDomainTeacherChart').getContext('2d'), 'bar',
+                    {
+                        labels: data.teacherDomains.labels,
+                        datasets: [
+                            {
+                                label: data.teacherDomains.doong.name,
+                                data: data.teacherDomains.doong.data,
+                                backgroundColor: '#a5b4fc',
+                            },
+                            {
+                                label: data.teacherDomains.griffin.name,
+                                data: data.teacherDomains.griffin.data,
+                                backgroundColor: '#4f46e5',
+                            }
+                        ]
+                    }, { scales: { x: { grid: { display: false } }, y: { max: 60 } } }
+                );
+            } else {
+                // Use Horizontal Bar Chart for other grades
+                charts.gradeDomainChart = createChart(
+                    document.getElementById('gradeDomainChart').getContext('2d'), 'bar',
+                    {
+                        labels: data.domains.map(d => d.name),
+                        datasets: [{
+                            label: '% Proficient',
+                            data: data.domains.map(d => d.pct),
+                            backgroundColor: '#3b82f6',
+                        }]
+                    }, { indexAxis: 'y', scales: { x: { max: 60, ticks: { callback: v => v + '%' } }, y: { ticks: { autoSkip: false } } }, plugins: { legend: { display: false } } }
+                );
+            }
         }
 
         function renderStudentLists() {
@@ -643,59 +709,4 @@
             const data = reportData.recommendations;
             const html = `
                 <h1 class="text-3xl font-bold mb-6">Recommendations</h1>
-                <p class="text-lg text-neutral-600 mb-6">
-                    Based on the data, the report recommends the following four actions.
-                </p>
-                <div class="space-y-6">
-                    ${data.map((rec, i) => `
-                        <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
-                            <h3 class="text-xl font-semibold mb-3 text-indigo-700">
-                                ${i + 1}. ${rec.title}
-                            </h3>
-                            <p class="text-base text-neutral-700 leading-relaxed">${rec.text}</p>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            document.getElementById('content-area').innerHTML = html;
-        }
-
-        // --- APP INITIALIZATION ---
-        function navigate(view) {
-            clearContent();
-            updateNav(view);
-
-            switch (view) {
-                case 'dashboard':
-                    renderDashboard();
-                    break;
-                case 'grades':
-                    renderGradeDives();
-                    break;
-                case 'students':
-                    renderStudentLists();
-                    break;
-                case 'recommendations':
-                    renderRecommendations();
-                    break;
-                default:
-                    renderDashboard();
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const view = e.currentTarget.dataset.view;
-                    navigate(view);
-                });
-            });
-
-            // Initial load
-            navigate('dashboard');
-        });
-
-    </script>
-</body>
-</html>
+                <p class.
