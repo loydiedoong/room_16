@@ -27,16 +27,24 @@
             font-family: 'Playfair Display', serif;
         }
 
+        /* UPDATED: Active is now White (High Visibility) to match expectation */
         .gs-btn-active {
-            background-color: var(--gs-navy);
-            color: white;
-            border-color: var(--gs-navy);
-        }
-
-        .gs-btn-inactive {
             background-color: white;
             color: var(--gs-navy);
-            border: 1px solid #E5E7EB;
+            border-color: white;
+            font-weight: 600;
+        }
+
+        /* UPDATED: Inactive is now Dark (Low Visibility) to blend into header */
+        .gs-btn-inactive {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #9CA3AF; /* Light gray text */
+            border: 1px solid transparent;
+        }
+        
+        .gs-btn-inactive:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
         }
 
         .gs-card {
@@ -74,15 +82,16 @@
                     <i data-lucide="bar-chart-2" class="w-6 h-6 text-[#C5A983]"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-semibold tracking-wide uppercase">Daniel Webster Elementary</h1>
+                    <h1 class="text-xl font-semibold tracking-wide uppercase">Executive Data Brief</h1>
                     <p class="text-xs text-gray-300 font-sans uppercase tracking-wider">Winter Diagnostic 2025-26</p>
                 </div>
             </div>
-            <div class="flex gap-0">
-                <button onclick="switchTab('reading')" id="btn-reading" class="gs-btn-active px-6 py-2 text-sm font-medium transition-all border-r border-white/20 first:rounded-l-sm">
+            <!-- Updated Tab Group -->
+            <div class="flex gap-0 bg-[#08121e] p-1 rounded-sm border border-white/10">
+                <button onclick="switchTab('reading')" id="btn-reading" class="gs-btn-active px-6 py-2 text-sm font-medium transition-all rounded-sm shadow-sm">
                     Reading Analysis
                 </button>
-                <button onclick="switchTab('math')" id="btn-math" class="gs-btn-inactive px-6 py-2 text-sm font-medium transition-all last:rounded-r-sm">
+                <button onclick="switchTab('math')" id="btn-math" class="gs-btn-inactive px-6 py-2 text-sm font-medium transition-all rounded-sm">
                     Math Analysis
                 </button>
             </div>
@@ -289,8 +298,8 @@
             },
             recommendations: [
                 { title: "Compliance Audit (Lopez)", text: "Immediate makeup testing required for 10 missing students. Current dataset is statistically invalid without full roster." },
-                { title: "Validity Check (Griffin)", text: "67% regression is a statistical anomaly. Perhaps investigate testing environment integrity." },
-                { title: "Differentiatation (General)", text: "Try using iReady's instructional grouping to differentiate content for struggling students. Try increasing student movement, voice, reflection and feedback." }
+                { title: "Validity Check (Griffin)", text: "67% regression is a statistical anomaly. Investigate testing environment integrity immediately." },
+                { title: "Instructional Scaling (Doong)", text: "Institutionalize phonics interventions used in this cohort. Create playbook for Grade 5 implementation." }
             ]
         };
 
@@ -371,7 +380,7 @@
             
             document.getElementById('summary-prof').textContent = data.summary.proficiency + '%';
             const changeEl = document.getElementById('summary-prof-change');
-            changeEl.innerHTML = `<span class="${profColor} font-bold">${profSign}${profChange}%</span> vs prev trimester`;
+            changeEl.innerHTML = `<span class="${profColor} font-bold">${profSign}${profChange}%</span> vs prev quarter`;
 
             document.getElementById('summary-growth').textContent = data.summary.metAnnualGrowth + '%';
             document.getElementById('summary-stagnation').textContent = data.summary.stagnation + '%';
@@ -416,8 +425,8 @@
                 grade.teachers.forEach(teacher => {
                     // Determine status color
                     let statusClass = "text-gray-500";
-                    if (teacher.status.includes("Exemplary") || teacher.status.includes("Strong")) statusClass = "text-green-700 font-bold";
-                    if (teacher.status.includes("Critical") || teacher.status.includes("Intervention") || teacher.status.includes("Support")) statusClass = "text-red-700 font-bold";
+                    if (teacher.status.includes("Exemplary") || teacher.status.includes("Strong") || teacher.status.includes("Exemplary Model")) statusClass = "text-green-700 font-bold";
+                    if (teacher.status.includes("Critical") || teacher.status.includes("Intervention") || teacher.status.includes("Support") || teacher.status.includes("High Variance")) statusClass = "text-red-700 font-bold";
 
                     const row = `
                         <tr class="hover:bg-blue-50 transition-colors">
@@ -479,14 +488,14 @@
             const readingBtn = document.getElementById('btn-reading');
             const mathBtn = document.getElementById('btn-math');
             
-            // Toggle Button Styles
+            // Update Styles: Active = White, Inactive = Transparent
             if (tab === 'reading') {
-                readingBtn.className = "gs-btn-active px-6 py-2 text-sm font-medium transition-all border-r border-white/20 first:rounded-l-sm";
-                mathBtn.className = "gs-btn-inactive px-6 py-2 text-sm font-medium transition-all last:rounded-r-sm";
+                readingBtn.className = "gs-btn-active px-6 py-2 text-sm font-medium transition-all rounded-sm shadow-sm";
+                mathBtn.className = "gs-btn-inactive px-6 py-2 text-sm font-medium transition-all rounded-sm";
                 renderDashboard(READING_DATA);
             } else {
-                mathBtn.className = "gs-btn-active px-6 py-2 text-sm font-medium transition-all last:rounded-r-sm";
-                readingBtn.className = "gs-btn-inactive px-6 py-2 text-sm font-medium transition-all border-r border-gray-200 first:rounded-l-sm";
+                mathBtn.className = "gs-btn-active px-6 py-2 text-sm font-medium transition-all rounded-sm shadow-sm";
+                readingBtn.className = "gs-btn-inactive px-6 py-2 text-sm font-medium transition-all rounded-sm";
                 renderDashboard(MATH_DATA);
             }
             
