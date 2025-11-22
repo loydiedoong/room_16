@@ -371,7 +371,7 @@
             
             document.getElementById('summary-prof').textContent = data.summary.proficiency + '%';
             const changeEl = document.getElementById('summary-prof-change');
-            changeEl.innerHTML = `<span class="${profColor} font-bold">${profSign}${profChange}%</span> vs prev quarter`;
+            changeEl.innerHTML = `<span class="${profColor} font-bold">${profSign}${profChange}%</span> vs prev trimester`;
 
             document.getElementById('summary-growth').textContent = data.summary.metAnnualGrowth + '%';
             document.getElementById('summary-stagnation').textContent = data.summary.stagnation + '%';
