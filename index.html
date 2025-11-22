@@ -1,734 +1,503 @@
-<!-- Chosen Palette: Calm Harmony (Neutral background, white panels, blue/green/red accents) -->
-<!-- Application Structure Plan: A dashboard-style SPA with a left-hand navigation. This structure is designed for different user roles (Leadership vs. Teachers). Leadership can use the 'School-Wide Dashboard' (default) for a high-level overview. Grade-Level leads can use 'Grade-Level Deep Dives' to compare classes. Teachers can use the 'Student Action Lists' page to filter for their specific students who need intervention or celebration. This is more usable than a linear report as it allows users to immediately access the information relevant to their role and task. -->
-<!-- Visualization & Content Choices:
-- School-Wide KPIs: Inform -> Dynamic Stat Cards (HTML/Tailwind) -> Shows high-level metrics from Exec Summary.
-- School-Wide Proficiency (Fall vs Winter): Show Change -> Bar Chart (Chart.js) -> Clearly visualizes the 8.2 p.p. gain.
-- School-Wide Growth Breakdown: Show Proportions -> Donut Chart (Chart.js) -> Shows ratio of Met Annual (16.3%), Regressed (25.2%), and Grew/Below (58.5%).
-- Domain Performance (School & Grade): Compare -> Horizontal Bar Chart (Chart.js) -> Best for comparing the 4 domains and identifying strengths/weaknesses. Dynamically updates on the Grade-Level page.
-- Teacher Comparisons: Compare -> Grouped Bar Chart (Chart.js) -> Directly compares teachers on % Met Growth and % Regressed.
-- Student Lists: Organize/Inform -> Interactive HTML Table -> On-click tabs (Celebration/Intervention) and dropdown filters (Grade, Teacher) allow teachers to create actionable lists for their own class.
-- Recommendations: Inform -> Styled HTML list -> Presents the report's recommendations clearly.
--->
-<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Winter Math Diagnostic Dashboard</title>
+    <title>Winter Diagnostic Executive Brief</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        /* Custom Font Overrides for that "Financial Report" feel */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@400;600;700&display=swap');
+
+        :root {
+            --gs-navy: #0C1C2E;
+            --gs-blue: #1E3A5F;
+            --gs-gold: #C5A983;
+            --gs-gray: #F4F5F7;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
+            background-color: var(--gs-gray);
+            color: #333;
         }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 100%; /* Allow full width of container */
-            height: 300px;
-            max-height: 40vh;
+
+        h1, h2, h3, .serif-font {
+            font-family: 'Playfair Display', serif;
         }
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 350px;
-                max-height: 400px;
-            }
-        }
-        .nav-item {
-            cursor: pointer;
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        .nav-item:hover {
-            background-color: #eef2ff;
-            color: #4338ca;
-        }
-        .nav-item.active {
-            background-color: #4f46e5;
+
+        .gs-btn-active {
+            background-color: var(--gs-navy);
             color: white;
+            border-color: var(--gs-navy);
         }
-        .tab-button {
-            padding: 0.75rem 1.5rem;
-            font-weight: 500;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
+
+        .gs-btn-inactive {
+            background-color: white;
+            color: var(--gs-navy);
+            border: 1px solid #E5E7EB;
         }
-        .tab-button.active {
-            color: #4f46e5;
-            border-bottom-color: #4f46e5;
+
+        .gs-card {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-top: 3px solid var(--gs-navy);
         }
-        .tab-button:hover:not(.active) {
-            color: #4f46e5;
-            background-color: #eef2ff;
+
+        .gs-table-header {
+            background-color: #F9FAFB;
+            border-bottom: 2px solid var(--gs-navy);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.75rem;
+            color: var(--gs-navy);
+        }
+
+        .metric-value {
+            font-variant-numeric: tabular-nums;
+        }
+        
+        /* Subtle gold highlight for emphasis */
+        .gold-accent {
+            color: var(--gs-gold);
         }
     </style>
 </head>
-<body class="bg-neutral-50 text-neutral-800">
+<body class="min-h-screen">
 
-    <div class="flex h-screen flex-col md:flex-row">
-        <!-- Sidebar Navigation -->
-        <nav class="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-neutral-200 p-4 flex-shrink-0">
-            <h1 class="text-xl font-bold text-indigo-700 mb-6 px-2 hidden md:block">Winter Math Report</h1>
-            <div class="md:hidden flex justify-between items-center mb-4">
-                <h1 class="text-xl font-bold text-indigo-700">Winter Math Report</h1>
+    <!-- Navigation / Header -->
+    <header class="bg-[#0C1C2E] text-white border-b-4 border-[#C5A983] sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="bg-white/10 p-2 rounded-sm">
+                    <i data-lucide="bar-chart-2" class="w-6 h-6 text-[#C5A983]"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-semibold tracking-wide uppercase">Executive Data Brief</h1>
+                    <p class="text-xs text-gray-300 font-sans uppercase tracking-wider">Winter Diagnostic 2025-26</p>
+                </div>
             </div>
-            <ul class="flex md:flex-col overflow-x-auto md:overflow-visible space-x-2 md:space-x-0 md:space-y-2 pb-2 md:pb-0">
-                <li><a class="nav-item active whitespace-nowrap" data-view="dashboard">
-                    School-Wide
-                </a></li>
-                <li><a class="nav-item whitespace-nowrap" data-view="grades">
-                    Grade Deep Dives
-                </a></li>
-                <li><a class="nav-item whitespace-nowrap" data-view="students">
-                    Student Action Lists
-                </a></li>
-                <li><a class="nav-item whitespace-nowrap" data-view="recommendations">
-                    Recommendations
-                </a></li>
-            </ul>
-        </nav>
-
-        <!-- Main Content Area -->
-        <main class="flex-1 overflow-y-auto p-4 md:p-10 bg-neutral-50">
-            <div id="content-area">
-                <!-- Content will be dynamically injected here by JavaScript -->
+            <div class="flex gap-0">
+                <button onclick="switchTab('reading')" id="btn-reading" class="gs-btn-active px-6 py-2 text-sm font-medium transition-all border-r border-white/20 first:rounded-l-sm">
+                    Reading Analysis
+                </button>
+                <button onclick="switchTab('math')" id="btn-math" class="gs-btn-inactive px-6 py-2 text-sm font-medium transition-all last:rounded-r-sm">
+                    Math Analysis
+                </button>
             </div>
-        </main>
-    </div>
+        </div>
+    </header>
 
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- Date Stamp -->
+        <div class="flex justify-between items-end mb-6 border-b border-gray-300 pb-2">
+            <h2 id="report-title" class="text-2xl text-[#0C1C2E] font-bold">Reading Performance Overview</h2>
+            <span class="text-sm text-gray-500 font-mono">REPORT_ID: W-25-DIAG</span>
+        </div>
+
+        <!-- Executive Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <!-- Proficiency -->
+            <div class="gs-card p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs font-bold uppercase tracking-widest text-gray-500">Proficiency</span>
+                    <i data-lucide="award" class="w-4 h-4 text-[#0C1C2E]"></i>
+                </div>
+                <div class="text-4xl font-serif text-[#0C1C2E] mb-1" id="summary-prof">--%</div>
+                <div class="text-xs font-medium" id="summary-prof-change">--</div>
+            </div>
+
+            <!-- Annual Growth -->
+            <div class="gs-card p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs font-bold uppercase tracking-widest text-gray-500">Met Annual Goal</span>
+                    <i data-lucide="trending-up" class="w-4 h-4 text-green-700"></i>
+                </div>
+                <div class="text-4xl font-serif text-[#0C1C2E] mb-1" id="summary-growth">--%</div>
+                <div class="text-xs text-gray-500">Students met full year target</div>
+            </div>
+
+            <!-- Risk -->
+            <div class="gs-card p-5 border-t-red-600">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs font-bold uppercase tracking-widest text-gray-500">Risk Exposure</span>
+                    <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600"></i>
+                </div>
+                <div class="text-4xl font-serif text-red-700 mb-1" id="summary-stagnation">--%</div>
+                <div class="text-xs text-gray-500">Stagnation or Regression</div>
+            </div>
+
+            <!-- Key Driver -->
+            <div class="gs-card p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs font-bold uppercase tracking-widest text-gray-500">Primary Driver</span>
+                    <i data-lucide="target" class="w-4 h-4 text-blue-600"></i>
+                </div>
+                <div class="text-lg font-bold text-[#0C1C2E] mb-1 leading-tight" id="summary-domain-name">--</div>
+                <div class="text-xs text-gray-500" id="summary-domain-val">--% Proficient</div>
+            </div>
+        </div>
+
+        <!-- Split View: Analysis & Teacher Table -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            
+            <!-- Left Column: Domain Analysis -->
+            <div class="lg:col-span-1">
+                <div class="bg-white p-6 border border-gray-200 shadow-sm h-full">
+                    <h3 class="text-lg font-bold text-[#0C1C2E] mb-6 pb-2 border-b border-gray-100">Sector Performance</h3>
+                    <div id="domain-container" class="space-y-6">
+                        <!-- Domain bars injected here -->
+                    </div>
+                    <div class="mt-8 p-4 bg-gray-50 border-l-4 border-[#C5A983] text-sm text-gray-700 italic">
+                        "Strategic focus required on underperforming sectors to rebalance overall portfolio growth."
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Detailed Teacher Metrics -->
+            <div class="lg:col-span-2">
+                <div class="bg-white border border-gray-200 shadow-sm">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-[#0C1C2E]">Cohort Performance Matrix</h3>
+                        <span class="text-xs uppercase bg-gray-100 px-2 py-1 rounded text-gray-600">YTD Data</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="gs-table-header">
+                                    <th class="p-4">Educator</th>
+                                    <th class="p-4">Count</th>
+                                    <th class="p-4">Proficiency</th>
+                                    <th class="p-4">Growth Target</th>
+                                    <th class="p-4 text-red-700">Regression</th>
+                                    <th class="p-4">Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teacher-table-body" class="divide-y divide-gray-100">
+                                <!-- Rows injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Spotlights (High Velocity vs Risk) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <!-- High Performers -->
+            <div class="bg-white border border-gray-200">
+                <div class="p-4 border-b border-gray-200 bg-green-50/50 flex justify-between items-center">
+                    <h3 class="font-bold text-green-900 font-serif">Top Equity Performers</h3>
+                    <i data-lucide="trending-up" class="w-4 h-4 text-green-700"></i>
+                </div>
+                <div class="p-0 max-h-80 overflow-y-auto" id="high-flyers-list">
+                    <!-- List items injected here -->
+                </div>
+            </div>
+
+            <!-- Watch List -->
+            <div class="bg-white border border-gray-200">
+                <div class="p-4 border-b border-gray-200 bg-red-50/50 flex justify-between items-center">
+                    <h3 class="font-bold text-red-900 font-serif">Critical Watch List</h3>
+                    <i data-lucide="alert-octagon" class="w-4 h-4 text-red-700"></i>
+                </div>
+                <div class="p-0 max-h-80 overflow-y-auto" id="intervention-list">
+                    <!-- List items injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Strategic Recommendations -->
+        <div class="mb-12">
+            <h3 class="text-xl font-bold text-[#0C1C2E] mb-4 font-serif">Forward Guidance & Strategy</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="recommendations-container">
+                <!-- Recommendations injected here -->
+            </div>
+        </div>
+        
+        <footer class="text-center text-xs text-gray-400 py-6 border-t border-gray-200">
+            <p>CONFIDENTIAL • INTERNAL USE ONLY • 2025-2026 ACADEMIC YEAR</p>
+        </footer>
+
+    </main>
+
+    <!-- Data & Application Logic -->
     <script>
-        // --- DATA STORE (Source of Truth) ---
-        const reportData = {
-            schoolWide: {
-                proficiency: { fall: 20.7, winter: 28.9 },
-                growth: { metAnnual: 16.3, regressed: 25.2, other: (100 - 16.3 - 25.2).toFixed(1) },
+        // --- DATA CONSTANTS ---
+        const READING_DATA = {
+            title: "Reading Performance Overview",
+            summary: {
+                proficiency: 11.3,
+                proficiencyChange: 4.0,
+                metAnnualGrowth: 30.5,
+                stagnation: 33.8,
+                topDomain: { name: "Phonics", value: 61.9 },
+                bottomDomain: { name: "Informational Text", value: 11.2 },
                 domains: [
-                    { name: 'Number and Operations', pct: 43.4 },
-                    { name: 'Algebra and Algebraic Thinking', pct: 35.1 },
-                    { name: 'Measurement and Data', pct: 30.1 },
-                    { name: 'Geometry', pct: 25.8 },
-                ].sort((a,b) => b.pct - a.pct)
+                    { name: "Phonics", value: 61.9 },
+                    { name: "Lit Comprehension", value: 23.1 },
+                    { name: "Vocabulary", value: 15.7 },
+                    { name: "Info Text", value: 11.2 },
+                ]
             },
-            gradeData: {
-                3: {
-                    summary: "The 3rd-grade team shows the most promising growth profile. Mr. Griffin's class, starting with only 4.8% proficiency, made a remarkable 19.0 point jump to 23.8%. Mr. Doong's class, while showing a smaller proficiency gain (+8.7 p.p.), had an impressively low regression rate of only 4.3%. The most telling data is the domain comparison: Mr. Doong's class is outperforming in 'Algebra and Algebraic Thinking' (47.8% proficient), while both classes are nearly tied in 'Number and Operations'.",
-                    domains: [
-                        { name: 'Number and Operations', pct: 47.0 },
-                        { name: 'Algebra and Algebraic Thinking', pct: 40.0 },
-                        { name: 'Measurement and Data', pct: 32.0 },
-                        { name: 'Geometry', pct: 23.0 },
-                    ].sort((a,b) => b.pct - a.pct),
-                    teacherDomains: {
-                        labels: ["N&O", "Algebra", "M&D", "Geo"],
-                        doong: { name: "Doong", data: [43.5, 47.8, 30, 22] },
-                        griffin: { name: "Griffin", data: [42.9, 33.3, 33, 29] }
-                    },
+            grades: [
+                {
+                    grade: "Grade 3",
+                    analysis: "High variance between cohorts.",
                     teachers: [
-                        { name: 'Doong', students: 23, profFall: 17.4, profWinter: 26.1, profChange: 8.7, metGrowth: 26.1, regressed: 4.3 },
-                        { name: 'Griffin', students: 21, profFall: 4.8, profWinter: 23.8, profChange: 19.0, metGrowth: 23.8, regressed: 19.0 },
+                        { name: "Doong", students: 23, proficient: 21.7, metGrowth: 69.6, regression: 4.3, status: "Strong Buy / Exemplary" },
+                        { name: "Griffin", students: 24, proficient: 12.5, metGrowth: 12.5, regression: 66.7, status: "Underperform" }
                     ]
                 },
-                4: {
-                    summary: "The 4th-grade data presents a significant challenge. Both classes are struggling with high rates of stagnation or regression, at 30.4% (Sheiring) and 27.3% (Sutter). This means nearly 1 in 3 students in 4th grade lost ground. This grade level requires the most urgent review of instructional practices and intervention models.",
-                    domains: [
-                        { name: 'Number and Operations', pct: 48.9 },
-                        { name: 'Algebra and Algebraic Thinking', pct: 35.6 },
-                        { name: 'Measurement and Data', pct: 26.7 },
-                        { name: 'Geometry', pct: 26.7 },
-                    ].sort((a,b) => b.pct - a.pct),
+                {
+                    grade: "Grade 4",
+                    analysis: "Stable but low growth velocity.",
                     teachers: [
-                        { name: 'Sheiring', students: 23, profFall: 21.7, profWinter: 26.1, profChange: 4.4, metGrowth: 13.0, regressed: 30.4 },
-                        { name: 'Sutter', students: 22, profFall: 27.3, profWinter: 36.4, profChange: 9.1, metGrowth: 13.6, regressed: 27.3 },
+                        { name: "Sheiring", students: 26, proficient: 11.5, metGrowth: 34.6, regression: 23.1, status: "Neutral" },
+                        { name: "Sutter", students: 24, proficient: 12.5, metGrowth: 33.3, regression: 20.8, status: "Neutral" }
                     ]
                 },
-                5: {
-                    summary: "5th grade shows the lowest overall growth and the most alarming classroom-level discrepancy. Ms. Lopez's class is in a critical state, with nearly half of the students (47.4%) showing zero or negative growth. This regression rate is an outlier for the entire school and demands immediate, targeted intervention. In contrast, Ms. Long's class has the highest proficiency in the grade (33.3%) but is still struggling to move students, with only 7.4% meeting their annual growth target.",
-                    domains: [
-                        { name: 'Number and Operations', pct: 39.1 },
-                        { name: 'Algebra and Algebraic Thinking', pct: 26.1 },
-                        { name: 'Measurement and Data', pct: 28.3 },
-                        { name: 'Geometry', pct: 28.3 },
-                    ].sort((a,b) => b.pct - a.pct),
+                {
+                    grade: "Grade 5",
+                    analysis: "Significant downside risk detected.",
                     teachers: [
-                        { name: 'Long', students: 27, profFall: 29.6, profWinter: 33.3, profChange: 3.7, metGrowth: 7.4, regressed: 25.9 },
-                        { name: 'Lopez', students: 19, profFall: 21.1, profWinter: 26.3, profChange: 5.2, metGrowth: 15.8, regressed: 47.4 },
+                        { name: "Long", students: 29, proficient: 10.3, metGrowth: 17.2, regression: 44.8, status: "Sell / Concern" },
+                        { name: "Lopez", students: 15, proficient: 0.0, metGrowth: 20.0, regression: 40.0, status: "Incomplete Data" }
                     ]
                 }
-            },
-            studentLists: {
-                celebration: [
-                    { name: 'Lozano Camacho, Marcus', teacher: 'Doong', grade: 3, growth: 37 },
-                    { name: 'Abad, Caitlyn', teacher: 'Doong', grade: 3, growth: 34 },
-                    { name: 'Maldonado de Leon, Jairo', teacher: 'Doong', grade: 3, growth: 33 },
-                    { name: 'Bosheh, Naya', teacher: 'Doong', grade: 3, growth: 30 },
-                    { name: 'Estrada, Abraham', teacher: 'Doong', grade: 3, growth: 28 },
-                    { name: 'Regado, Scarlett Heart', teacher: 'Griffin', grade: 3, growth: 44 },
-                    { name: 'Catiis, Rayliegh', teacher: 'Griffin', grade: 3, growth: 39 },
-                    { name: 'Lingstuyl Gonzalez, Edward', teacher: 'Griffin', grade: 3, growth: 39 },
-                    { name: 'Cifuentes Barrios, Giovanni', teacher: 'Griffin', grade: 3, growth: 32 },
-                    { name: 'Ferrer Castrillo, Kristal', teacher: 'Sheiring', grade: 4, growth: 45 },
-                    { name: 'Chang, Reginald James', teacher: 'Sheiring', grade: 4, growth: 39 },
-                    { name: 'Khanouf, Charbel', teacher: 'Sheiring', grade: 4, growth: 32 },
-                    { name: 'Mendez Alvarez, Mathias Arturo', teacher: 'Sutter', grade: 4, growth: 34 },
-                    { name: 'Hernandez Gomez, Chelsea', teacher: 'Lopez', grade: 5, growth: 33 },
+            ],
+            students: {
+                highFlyers: [
+                    { name: "Reyes Cabrera, Jose", teacher: "Doong", growth: 109, note: "Grade 1 -> Mid 3" },
+                    { name: "Salazar Solares, Jose", teacher: "Doong", growth: 80, note: "Grade 1 -> Early 3" },
+                    { name: "Estrada, Abraham", teacher: "Doong", growth: 62, note: "Grade K -> Grade 1" },
+                    { name: "Chen, Eason", teacher: "Griffin", growth: 61, note: "Grade 1 -> Grade 2" },
+                    { name: "Nan, Lillian", teacher: "Sheiring", growth: 52, note: "Grade 3 -> Mid 4" },
+                    { name: "Sitt, John", teacher: "Long", growth: 52, note: "Early 5 -> Late 5" },
+                    { name: "Resendiz, Andrew", teacher: "Lopez", growth: 59, note: "Grade K -> Grade 1" },
                 ],
                 intervention: [
-                    { name: 'Salazar Solares, Jose', teacher: 'Doong', grade: 3, growth: 0 },
-                    { name: 'Martinez, Emiliano', teacher: 'Griffin', grade: 3, growth: -16 },
-                    { name: 'Moguel Ortega, Skylar', teacher: 'Griffin', grade: 3, growth: -12 },
-                    { name: 'Bolanos, Victoria', teacher: 'Griffin', grade: 3, growth: -3 },
-                    { name: 'Chen, Eason', teacher: 'Griffin', grade: 3, growth: -1 },
-                    { name: 'Montenegro, John Kieffer', teacher: 'Sheiring', grade: 4, growth: -19 },
-                    { name: 'Racines, Kyann', teacher: 'Sheiring', grade: 4, growth: -12 },
-                    { name: 'Alvarado Reyes, Alexa', teacher: 'Sheiring', grade: 4, growth: -12 },
-                    { name: 'Laxa, Dominic James', teacher: 'Sheiring', grade: 4, growth: -9 },
-                    { name: 'Quintero, Elijah', teacher: 'Sheiring', grade: 4, growth: -9 },
-                    { name: 'Gutierrez, Victoria', teacher: 'Sheiring', grade: 4, growth: -2 },
-                    { name: 'Ocampo, Jham Paola', teacher: 'Sheiring', grade: 4, growth: -2 },
-                    { name: 'Pang, Zoey', teacher: 'Sutter', grade: 4, growth: -9 },
-                    { name: 'Gramajo Cifuentes, Angelica Milagros', teacher: 'Sutter', grade: 4, growth: -8 },
-                    { name: 'Campos Castillo, Nicole', teacher: 'Sutter', grade: 4, growth: -2 },
-                    { name: 'Pascua, Tony Zachary', teacher: 'Sutter', grade: 4, growth: 0 },
-                    { name: 'Perdomo Aragon, Ian Mauricio', teacher: 'Sutter', grade: 4, growth: 0 },
-                    { name: 'E Sousa, Aghatta', teacher: 'Sutter', grade: 4, growth: 0 },
-                    { name: 'Ferrer Castrillo, Ashlet', teacher: 'Long', grade: 5, growth: -18 },
-                    { name: 'Galang, Titan Stieg', teacher: 'Long', grade: 5, growth: -11 },
-                    { name: 'Stewart, Mia', teacher: 'Long', grade: 5, growth: -4 },
-                    { name: 'Sitt, John', teacher: 'Long', grade: 5, growth: -3 },
-                    { name: 'Barreda Reyes, Nelson', teacher: 'Long', grade: 5, growth: -2 },
-                    { name: 'Soto Aguilar, Victoria', teacher: 'Long', grade: 5, growth: -1 },
-                    { name: 'Wynn, Hnin Ei Ei', teacher: 'Long', grade: 5, growth: 0 },
-                    { name: 'Catanyag, Anzel Jeric', teacher: 'Lopez', grade: 5, growth: -26 },
-                    { name: 'Gualoto Pineda, Mathias', teacher: 'Lopez', grade: 5, growth: -21 },
-                    { name: 'Guzman Gordillo, Carlos', teacher: 'Lopez', grade: 5, growth: -19 },
-                    { name: 'Di Miceli Garcia, Mia', teacher: 'Lopez', grade: 5, growth: -14 },
-                    { name: 'Khanouf, Giovanni', teacher: 'Lopez', grade: 5, growth: -8 },
-                    { name: 'Htet, Thwin Moe', teacher: 'Lopez', grade: 5, growth: -6 },
-                    { name: 'Resendiz, Andrew', teacher: 'Lopez', grade: 5, growth: -4 },
-                    { name: 'Cornejo Segovia, Danya', teacher: 'Lopez', grade: 5, growth: -1 },
-                    { name: 'Gonzalez Hernandez, Dominic', teacher: 'Lopez', grade: 5, growth: 0 },
+                    { name: "Catiis, Rayliegh", teacher: "Griffin", growth: -93, note: "Validity Error Likely" },
+                    { name: "Gualoto Pineda, Mathias", teacher: "Lopez", growth: -91, note: "Severe Drop" },
+                    { name: "Padayhag, Selyna", teacher: "Griffin", growth: -62, note: "Grade K Level" },
+                    { name: "Tongol, William David", teacher: "Long", growth: -46, note: "Grade K Level" },
+                    { name: "Perez, Casey", teacher: "Sutter", growth: -31, note: "Dropped from Proficient" },
                 ]
             },
             recommendations: [
-                { title: "Address Stagnation/Regression", text: "The 34 students identified as stagnating or regressing (25.2% of the cohort) need immediate review. This is particularly urgent in 5th grade (Ms. Lopez's class) and 4th grade (both classes), where rates were highest." },
-                { title: "Leverage 3rd Grade Growth", text: "The 3rd-grade team showed the highest rate of students meeting their full annual growth target (25.0%). We should have them share successful strategies and routines with the 4th and 5th-grade teams." },
-                { title: "Analyze High-Growth Students", text: "The 14 students in the 'Significant Growth (Below Level)' list are responding to instruction. Teachers should review these students to identify what strategies are working and apply them to other students." },
-                { title: "School-Wide Focus on Geometry", text: "The data consistently shows 'Geometry' as the weakest domain across all three grade levels (25.8% proficiency). I recommend a vertical team meeting (Grades 3-5) to review curriculum pacing and instructional strategies for this domain." }
+                { title: "Compliance Audit (Lopez)", text: "Immediate makeup testing required for 10 missing students. Current dataset is statistically invalid without full roster." },
+                { title: "Validity Check (Griffin)", text: "67% regression is a statistical anomaly. Investigate testing environment integrity immediately." },
+                { title: "Strategy Replication (Doong)", text: "Institutionalize phonics interventions used in this cohort. Create playbook for Grade 5 implementation." }
             ]
         };
 
-        // --- CHART INSTANCES ---
-        let charts = {};
-
-        // --- UTILITY FUNCTIONS ---
-        function clearContent() {
-            const contentArea = document.getElementById('content-area');
-            contentArea.innerHTML = '';
-            Object.values(charts).forEach(chart => chart.destroy());
-            charts = {};
-        }
-
-        function updateNav(view) {
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.toggle('active', item.dataset.view === view);
-            });
-        }
-        
-        function createChart(ctx, type, data, options) {
-            const defaultOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 10,
-                            font: { size: 12 }
-                        }
-                    },
-                    tooltip: {
-                        enabled: true,
-                        backgroundColor: '#0f172a',
-                        titleFont: { size: 14, weight: 'bold' },
-                        bodyFont: { size: 12 },
-                        padding: 10,
-                        cornerRadius: 4,
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) label += ': ';
-                                let value;
-                                if (context.parsed && context.parsed.y !== null && context.parsed.y !== undefined) {
-                                    value = context.parsed.y;
-                                } else if (context.parsed && context.parsed.x !== null && context.parsed.x !== undefined) {
-                                    value = context.parsed.x;
-                                } else if (context.raw) {
-                                    value = context.raw;
-                                } else {
-                                    value = 0;
-                                }
-                                label += parseFloat(value).toFixed(1) + '%';
-                                return label;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 12 } }
-                    },
-                    y: {
-                        grid: { color: '#e5e7eb' },
-                        beginAtZero: true,
-                        ticks: {
-                            font: { size: 12 },
-                            callback: function(value) { return value + '%'; }
-                        }
-                    }
-                }
-            };
-            
-            // Merge options
-            let mergedOptions = { ...defaultOptions, ...options };
-            if (options.scales) {
-                mergedOptions.scales = {
-                     x: { ...defaultOptions.scales.x, ...options.scales.x },
-                     y: { ...defaultOptions.scales.y, ...options.scales.y }
-                };
-            }
-            if(options.plugins) {
-                 mergedOptions.plugins = { ...defaultOptions.plugins, ...options.plugins };
-            }
-
-            return new Chart(ctx, { type, data, options: mergedOptions });
-        }
-
-        // --- RENDER FUNCTIONS ---
-        
-        function renderDashboard() {
-            const data = reportData.schoolWide;
-            const proficiencyGain = (data.proficiency.winter - data.proficiency.fall).toFixed(1);
-
-            const html = `
-                <h1 class="text-3xl font-bold mb-2">School-Wide Dashboard</h1>
-                <p class="text-lg text-neutral-600 mb-6">This section summarizes data for all 135 students who completed both diagnostics.</p>
-                
-                <!-- KPI Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
-                        <h3 class="text-sm font-medium text-neutral-500">Overall Proficiency (Winter)</h3>
-                        <p class="text-4xl font-bold text-indigo-600">${data.proficiency.winter}%</p>
-                        <p class="text-sm font-medium ${proficiencyGain >= 0 ? 'text-green-600' : 'text-red-600'}">
-                            ${proficiencyGain >= 0 ? '▲' : '▼'} ${proficiencyGain} p.p. from Fall
-                        </p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
-                        <h3 class="text-sm font-medium text-neutral-500">Met Full Annual Growth</h3>
-                        <p class="text-4xl font-bold text-green-600">${data.growth.metAnnual}%</p>
-                        <p class="text-sm text-neutral-500">22 out of 135 students</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
-                        <h3 class="text-sm font-medium text-neutral-500">Stagnant or Regressed</h3>
-                        <p class="text-4xl font-bold text-red-600">${data.growth.regressed}%</p>
-                        <p class="text-sm text-neutral-500">34 out of 135 students</p>
-                    </div>
-                </div>
-
-                <!-- Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200 lg:col-span-2">
-                        <h3 class="text-lg font-semibold mb-4">Proficiency: Fall vs. Winter</h3>
-                        <p class="text-sm text-neutral-600 mb-4">Shows the percentage of students at or above grade level ("Proficient").</p>
-                        <div class="chart-container"><canvas id="schoolProfChart"></canvas></div>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200 lg:col-span-3">
-                        <h3 class="text-lg font-semibold mb-4">School-Wide Domain Performance</h3>
-                        <p class="text-sm text-neutral-600 mb-4">"Number and Operations" is the school's key strength, while "Geometry" is the key weakness.</p>
-                        <div class="chart-container"><canvas id="schoolDomainChart"></canvas></div>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200 lg:col-span-5">
-                        <h3 class="text-lg font-semibold mb-4">Student Growth Breakdown (N=135)</h3>
-                        <p class="text-sm text-neutral-600 mb-4">This chart shows the distribution of student growth against their full annual target.</p>
-                        <div class="chart-container"><canvas id="schoolGrowthChart"></canvas></div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('content-area').innerHTML = html;
-
-            // Render charts
-            charts.schoolProfChart = createChart(
-                document.getElementById('schoolProfChart').getContext('2d'), 'bar',
+        const MATH_DATA = {
+            title: "Math Performance Overview",
+            summary: {
+                proficiency: 29.8,
+                proficiencyChange: 9.3,
+                metAnnualGrowth: 18.5,
+                stagnation: 24.5,
+                topDomain: { name: "Number & Ops", value: 42.4 },
+                bottomDomain: { name: "Geometry", value: 25.8 },
+                domains: [
+                    { name: "Number & Ops", value: 42.4 },
+                    { name: "Algebra", value: 37.7 },
+                    { name: "Measurement", value: 37.1 },
+                    { name: "Geometry", value: 25.8 },
+                ]
+            },
+            grades: [
                 {
-                    labels: ['Fall (Initial)', 'Winter (Current)'],
-                    datasets: [{
-                        label: '% Proficient',
-                        data: [data.proficiency.fall, data.proficiency.winter],
-                        backgroundColor: ['#a5b4fc', '#4f46e5'],
-                        barPercentage: 0.6,
-                    }]
-                }, { scales: { x: { grid: { display: false } }, y: { max: 50, ticks: { callback: v => v + '%' } } }, plugins: { legend: { display: false } } }
-            );
-
-            charts.schoolGrowthChart = createChart(
-                document.getElementById('schoolGrowthChart').getContext('2d'), 'doughnut',
-                {
-                    labels: ['Met Annual Growth', 'Stagnant or Regressed', 'Grew (Below Annual)'],
-                    datasets: [{
-                        data: [data.growth.metAnnual, data.growth.regressed, data.growth.other],
-                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
-                        borderColor: '#f9fafb',
-                        borderWidth: 2
-                    }]
-                }, { plugins: { legend: { position: 'right' } } }
-            );
-            
-            charts.schoolDomainChart = createChart(
-                document.getElementById('schoolDomainChart').getContext('2d'), 'bar',
-                {
-                    labels: data.domains.map(d => d.name),
-                    datasets: [{
-                        label: '% Proficient',
-                        data: data.domains.map(d => d.pct),
-                        backgroundColor: '#3b82f6',
-                        barPercentage: 0.6,
-                    }]
-                }, { indexAxis: 'y', scales: { x: { max: 50, ticks: { callback: v => v + '%' } }, y: { ticks: { autoSkip: false } } }, plugins: { legend: { display: false } } }
-            );
-        }
-
-        function renderGradeDives() {
-            const html = `
-                <h1 class="text-3xl font-bold mb-4">Grade-Level Deep Dives</h1>
-                <p class="text-lg text-neutral-600 mb-6">
-                    Select a grade to see a detailed breakdown of teacher comparisons and domain performance.
-                </p>
-                
-                <!-- Grade Tabs -->
-                <div class="flex border-b border-neutral-200 mb-6 bg-white rounded-t-lg shadow-sm">
-                    <button class="tab-button active" data-grade="3">Grade 3</button>
-                    <button class="tab-button" data-grade="4">Grade 4</button>
-                    <button class="tab-button" data-grade="5">Grade 5</button>
-                </div>
-                
-                <div id="grade-content">
-                    <!-- Grade content will be injected here -->
-                </div>
-            `;
-            document.getElementById('content-area').innerHTML = html;
-
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    renderGradeContent(button.dataset.grade);
-                });
-            });
-
-            // Initial load
-            renderGradeContent(3);
-        }
-        
-        function renderGradeContent(grade) {
-            const data = reportData.gradeData[grade];
-            Object.values(charts).forEach(chart => chart.destroy());
-            charts = {};
-
-            let grade3ChartsHTML = `
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
-                    <h3 class="text-lg font-semibold mb-4">Grade 3 Domain Performance (Overall)</h3>
-                    <p class="text-sm text-neutral-600 mb-4">This chart shows the proficiency rate for all students in Grade 3.</p>
-                    <div class="chart-container"><canvas id="gradeDomainChart"></canvas></div>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
-                    <h3 class="text-lg font-semibold mb-4">Grade 3 Domain Performance (Teacher)</h3>
-                    <p class="text-sm text-neutral-600 mb-4">This chart directly compares domain proficiency between Mr. Doong and Mr. Griffin.</p>
-                    <div class="chart-container"><canvas id="gradeDomainTeacherChart"></canvas></div>
-                </div>
-            `;
-            
-            let otherGradesChartHTML = `
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
-                    <h3 class="text-lg font-semibold mb-4">Grade ${grade} Domain Performance</h3>
-                    <p class="text-sm text-neutral-600 mb-4">This chart shows the proficiency rate for each math domain for all students in this grade.</p>
-                    <div class="chart-container"><canvas id="gradeDomainChart"></canvas></div>
-                </div>
-            `;
-
-            const html = `
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200 mb-6">
-                    <h3 class="text-xl font-semibold mb-2">Grade ${grade} Summary</h3>
-                    <p class="text-neutral-700 leading-relaxed">${data.summary}</p>
-                </div>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
-                        <h3 class="text-lg font-semibold mb-4">Teacher Comparison: Growth & Regression</h3>
-                        <p class="text-sm text-neutral-600 mb-4">This chart compares the percentage of students who met their full annual growth target against those who regressed.</p>
-                        <div class="chart-container"><canvas id="teacherCompareChart"></canvas></div>
-                    </div>
-                    
-                    ${grade == 3 ? grade3ChartsHTML : otherGradesChartHTML}
-                    
-                </div>
-            `;
-            document.getElementById('grade-content').innerHTML = html;
-            
-            // Render charts
-            charts.teacherCompareChart = createChart(
-                document.getElementById('teacherCompareChart').getContext('2d'), 'bar',
-                {
-                    labels: data.teachers.map(t => t.name),
-                    datasets: [
-                        {
-                            label: '% Met Full Annual Growth',
-                            data: data.teachers.map(t => t.metGrowth),
-                            backgroundColor: '#10b981',
-                        },
-                        {
-                            label: '% Stagnant/Regressed',
-                            data: data.teachers.map(t => t.regressed),
-                            backgroundColor: '#ef4444',
-                        }
+                    grade: "Grade 3",
+                    analysis: "Strongest growth engine in the portfolio.",
+                    teachers: [
+                        { name: "Doong", students: 23, proficient: 30.4, metGrowth: 17.4, regression: 0.0, status: "Strong Buy / Exemplary" },
+                        { name: "Griffin", students: 24, proficient: 20.8, metGrowth: 29.2, regression: 25.0, status: "High Volatility" }
                     ]
-                }, { scales: { x: { grid: { display: false } }, y: { max: 50 } } }
-            );
-
-            // Conditional Chart for Domains
-            if (grade == 3 && data.teacherDomains) {
-                // Chart 1: Grade 3 Average
-                charts.gradeDomainChart = createChart(
-                    document.getElementById('gradeDomainChart').getContext('2d'), 'bar',
-                    {
-                        labels: data.domains.map(d => d.name),
-                        datasets: [{
-                            label: '% Proficient',
-                            data: data.domains.map(d => d.pct),
-                            backgroundColor: '#3b82f6',
-                        }]
-                    }, { indexAxis: 'y', scales: { x: { max: 60, ticks: { callback: v => v + '%' } }, y: { ticks: { autoSkip: false } } }, plugins: { legend: { display: false } } }
-                );
-                
-                // Chart 2: Teacher Comparison
-                charts.gradeDomainTeacherChart = createChart(
-                    document.getElementById('gradeDomainTeacherChart').getContext('2d'), 'bar',
-                    {
-                        labels: data.teacherDomains.labels,
-                        datasets: [
-                            {
-                                label: data.teacherDomains.doong.name,
-                                data: data.teacherDomains.doong.data,
-                                backgroundColor: '#a5b4fc',
-                            },
-                            {
-                                label: data.teacherDomains.griffin.name,
-                                data: data.teacherDomains.griffin.data,
-                                backgroundColor: '#4f46e5',
-                            }
-                        ]
-                    }, { scales: { x: { grid: { display: false } }, y: { max: 60 } } }
-                );
-            } else {
-                // Use Horizontal Bar Chart for other grades
-                charts.gradeDomainChart = createChart(
-                    document.getElementById('gradeDomainChart').getContext('2d'), 'bar',
-                    {
-                        labels: data.domains.map(d => d.name),
-                        datasets: [{
-                            label: '% Proficient',
-                            data: data.domains.map(d => d.pct),
-                            backgroundColor: '#3b82f6',
-                        }]
-                    }, { indexAxis: 'y', scales: { x: { max: 60, ticks: { callback: v => v + '%' } }, y: { ticks: { autoSkip: false } } }, plugins: { legend: { display: false } } }
-                );
-            }
-        }
-
-        function renderStudentLists() {
-            const html = `
-                <h1 class="text-3xl font-bold mb-4">Student Action Lists</h1>
-                <p class="text-lg text-neutral-600 mb-6">
-                    Use the tabs and filters to create specific lists for celebration or intervention.
-                </p>
-
-                <!-- Tabs -->
-                <div class="flex border-b border-neutral-200 mb-6 bg-white rounded-t-lg shadow-sm">
-                    <button class="tab-button active" data-list="celebration">
-                        📈 Students for Celebration (${reportData.studentLists.celebration.length})
-                    </button>
-                    <button class="tab-button" data-list="intervention">
-                        🎯 Students for Intervention (${reportData.studentLists.intervention.length})
-                    </button>
-                </div>
-
-                <!-- Filters -->
-                <div class="flex flex-wrap gap-4 mb-6 p-4 bg-white rounded-lg shadow-sm border border-neutral-200">
-                    <div>
-                        <label for="grade-filter" class="block text-sm font-medium text-neutral-700">Filter by Grade</label>
-                        <select id="grade-filter" class="mt-1 block w-full md:w-48 rounded-md border-neutral-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="all">All Grades</option>
-                            <option value="3">Grade 3</option>
-                            <option value="4">Grade 4</option>
-                            <option value="5">Grade 5</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="teacher-filter" class="block text-sm font-medium text-neutral-700">Filter by Teacher</label>
-                        <select id="teacher-filter" class="mt-1 block w-full md:w-48 rounded-md border-neutral-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="all">All Teachers</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Student Table -->
-                <div class="bg-white shadow-sm border border-neutral-200 rounded-lg overflow-hidden">
-                    <table class="min-w-full divide-y divide-neutral-200">
-                        <thead class="bg-neutral-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Student</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Teacher</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Grade</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Actual Growth (Scale Score)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="student-table-body" class="bg-white divide-y divide-neutral-200">
-                            <!-- Rows will be injected here -->
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            document.getElementById('content-area').innerHTML = html;
-
-            // Add event listeners
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    populateStudentTable();
-                });
-            });
-
-            document.getElementById('grade-filter').addEventListener('change', () => {
-                updateTeacherFilter();
-                populateStudentTable();
-            });
-            document.getElementById('teacher-filter').addEventListener('change', populateStudentTable);
-
-            updateTeacherFilter();
-            populateStudentTable();
-        }
-
-        function updateTeacherFilter() {
-            const gradeFilter = document.getElementById('grade-filter').value;
-            const teacherFilter = document.getElementById('teacher-filter');
-            const currentTeacherVal = teacherFilter.value;
-            
-            let teachers = [];
-            if (gradeFilter === 'all') {
-                teachers = ['Doong', 'Griffin', 'Sheiring', 'Sutter', 'Long', 'Lopez'];
-            } else {
-                teachers = reportData.gradeData[gradeFilter].teachers.map(t => t.name);
-            }
-
-            teacherFilter.innerHTML = '<option value="all">All Teachers</option>';
-            teachers.sort().forEach(teacher => {
-                const option = document.createElement('option');
-                option.value = teacher;
-                option.textContent = teacher;
-                teacherFilter.appendChild(option);
-            });
-            
-            if (teachers.includes(currentTeacherVal)) {
-                teacherFilter.value = currentTeacherVal;
-            } else {
-                teacherFilter.value = 'all';
-            }
-        }
-
-        function populateStudentTable() {
-            const listType = document.querySelector('.tab-button.active').dataset.list;
-            const grade = document.getElementById('grade-filter').value;
-            const teacher = document.getElementById('teacher-filter').value;
-            const tableBody = document.getElementById('student-table-body');
-
-            const data = reportData.studentLists[listType];
-            
-            const filteredData = data.filter(student => {
-                const gradeMatch = (grade === 'all' || student.grade == grade);
-                const teacherMatch = (teacher === 'all' || student.teacher === teacher);
-                return gradeMatch && teacherMatch;
-            });
-            
-            if (listType === 'intervention') {
-                filteredData.sort((a, b) => a.growth - b.growth);
-            } else {
-                filteredData.sort((a, b) => b.growth - a.growth);
-            }
-
-            if (filteredData.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" class="px-6 py-6 text-center text-neutral-500">No students match the selected filters.</td></tr>';
-                return;
-            }
-
-            tableBody.innerHTML = filteredData.map(student => `
-                <tr class="hover:bg-neutral-50">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">${student.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">${student.teacher}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">${student.grade}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium ${student.growth <= 0 ? 'text-red-600' : 'text-green-600'}">
-                        ${student.growth > 0 ? '+' : ''}${student.growth}
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function renderRecommendations() {
-            const data = reportData.recommendations;
-            const html = `
-                <h1 class="text-3xl font-bold mb-6">Recommendations</h1>
-                <div class="space-y-6">
-                    ${data.map(rec => `
-                        <div class="bg-white p-6 rounded-lg shadow-sm border border-neutral-200">
-                            <h3 class="text-xl font-semibold mb-2 text-indigo-700">${rec.title}</h3>
-                            <p class="text-neutral-700 leading-relaxed">${rec.text}</p>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            document.getElementById('content-area').innerHTML = html;
-        }
-        
-        // --- NAVIGATION ROUTER ---
-        const views = {
-            'dashboard': renderDashboard,
-            'grades': renderGradeDives,
-            'students': renderStudentLists,
-            'recommendations': renderRecommendations,
+                },
+                {
+                    grade: "Grade 4",
+                    analysis: "Instructional interference causing drag.",
+                    teachers: [
+                        { name: "Sheiring", students: 26, proficient: 34.6, metGrowth: 19.2, regression: 26.9, status: "Neutral" },
+                        { name: "Sutter", students: 24, proficient: 37.5, metGrowth: 12.5, regression: 29.2, status: "Stagnant" }
+                    ]
+                },
+                {
+                    grade: "Grade 5",
+                    analysis: "Retention failure in Unit 2 material.",
+                    teachers: [
+                        { name: "Long", students: 29, proficient: 34.5, metGrowth: 20.7, regression: 27.6, status: "Hold" },
+                        { name: "Lopez", students: 25, proficient: 20.0, metGrowth: 12.0, regression: 36.0, status: "Sell / Critical" }
+                    ]
+                }
+            ],
+            students: {
+                highFlyers: [
+                    { name: "Lozano Camacho, Marcus", teacher: "Doong", growth: 37, note: "137% of Goal" },
+                    { name: "Abad, Caitlyn", teacher: "Doong", growth: 34, note: "126% of Goal" },
+                    { name: "Regado, Scarlett", teacher: "Griffin", growth: 44, note: "High Velocity" },
+                    { name: "Ferrer Castrillo, Kristal", teacher: "Sheiring", growth: 45, note: "High Velocity" },
+                    { name: "De Guzman, Joachim", teacher: "Lopez", growth: 181, note: "Outlier / Exclude" },
+                ],
+                intervention: [
+                    { name: "Catanyag, Anzel Jeric", teacher: "Lopez", growth: -26, note: "Dropped to Below Basic" },
+                    { name: "Ferrer Castrillo, Ashlet", teacher: "Long", growth: -18, note: "Critical Tier 3 Needed" },
+                    { name: "Montenegro, John", teacher: "Sheiring", growth: -19, note: "High achiever disengaged" },
+                    { name: "Martinez, Emiliano", teacher: "Griffin", growth: -16, note: "Regression" },
+                ]
+            },
+            recommendations: [
+                { title: "Curriculum Bridge (Grade 5)", text: "Pause Unit 3. Implement 1-week liquidity bridge (money models) to reteach Fraction-Decimal conversion." },
+                { title: "Fluency Hedge (Grade 4)", text: "Integrate 'Area Model' multiplication daily to prevent depreciation of Unit 2 skills." },
+                { title: "Management Restructure (Lopez)", text: "Cohort requires instructional coach to co-plan. Current strategy is not yielding ROI." }
+            ]
         };
 
-        function handleNavigation(event) {
-            const view = event.target.closest('.nav-item').dataset.view;
-            if (view) {
-                clearContent();
-                views[view]();
-                updateNav(view);
-            }
+        // --- RENDER LOGIC ---
+
+        function renderDashboard(data) {
+            // 1. Update Text Headers
+            document.getElementById('report-title').textContent = data.title;
+
+            // 2. Update Summary Cards
+            const profChange = data.summary.proficiencyChange;
+            const profSign = profChange > 0 ? '+' : '';
+            const profColor = profChange > 0 ? 'text-green-700' : 'text-red-700';
+            
+            document.getElementById('summary-prof').textContent = data.summary.proficiency + '%';
+            const changeEl = document.getElementById('summary-prof-change');
+            changeEl.innerHTML = `<span class="${profColor} font-bold">${profSign}${profChange}%</span> vs prev quarter`;
+
+            document.getElementById('summary-growth').textContent = data.summary.metAnnualGrowth + '%';
+            document.getElementById('summary-stagnation').textContent = data.summary.stagnation + '%';
+            
+            document.getElementById('summary-domain-name').textContent = data.summary.topDomain.name;
+            document.getElementById('summary-domain-val').textContent = data.summary.topDomain.value + '% Proficient';
+
+            // 3. Render Domains (Progress Bars)
+            const domainContainer = document.getElementById('domain-container');
+            domainContainer.innerHTML = '';
+            data.summary.domains.forEach((d, idx) => {
+                const barColor = idx === 0 ? 'bg-[#0C1C2E]' : 'bg-gray-300';
+                const html = `
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm font-bold text-gray-700">${d.name}</span>
+                            <span class="text-sm font-mono text-gray-500">${d.value}%</span>
+                        </div>
+                        <div class="w-full bg-gray-100 h-2 mb-1 border border-gray-200">
+                            <div class="${barColor} h-full" style="width: ${d.value}%"></div>
+                        </div>
+                    </div>
+                `;
+                domainContainer.innerHTML += html;
+            });
+
+            // 4. Render Teacher Table
+            const tableBody = document.getElementById('teacher-table-body');
+            tableBody.innerHTML = '';
+            
+            data.grades.forEach(grade => {
+                // Add Grade Header Row
+                tableBody.innerHTML += `
+                    <tr class="bg-gray-50 border-b border-gray-200">
+                        <td colspan="6" class="px-4 py-2">
+                            <span class="font-bold text-[#0C1C2E]">${grade.grade}</span>
+                            <span class="text-xs text-gray-500 ml-2 italic">- ${grade.analysis}</span>
+                        </td>
+                    </tr>
+                `;
+
+                grade.teachers.forEach(teacher => {
+                    // Determine status color
+                    let statusClass = "text-gray-500";
+                    if (teacher.status.includes("Exemplary") || teacher.status.includes("Strong Buy")) statusClass = "text-green-700 font-bold";
+                    if (teacher.status.includes("Critical") || teacher.status.includes("Sell")) statusClass = "text-red-700 font-bold";
+
+                    const row = `
+                        <tr class="hover:bg-blue-50 transition-colors">
+                            <td class="p-4 font-serif font-medium text-[#0C1C2E]">${teacher.name}</td>
+                            <td class="p-4 text-gray-500 metric-value">${teacher.students}</td>
+                            <td class="p-4 font-bold metric-value">${teacher.proficient}%</td>
+                            <td class="p-4 text-blue-700 metric-value">${teacher.metGrowth}%</td>
+                            <td class="p-4 text-red-600 metric-value">${teacher.regression}%</td>
+                            <td class="p-4 text-xs ${statusClass}">${teacher.status}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            });
+
+            // 5. Render Student Lists
+            const renderList = (containerId, students, isHigh) => {
+                const container = document.getElementById(containerId);
+                container.innerHTML = '';
+                students.forEach((s, i) => {
+                    const scoreClass = isHigh ? 'text-green-700' : 'text-red-700';
+                    const scoreSign = s.growth > 0 ? '+' : '';
+                    const bgClass = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                    
+                    const item = `
+                        <div class="p-3 border-b border-gray-100 ${bgClass} flex justify-between items-center">
+                            <div>
+                                <div class="text-sm font-bold text-gray-800">${s.name}</div>
+                                <div class="text-xs text-gray-500 font-serif italic">${s.teacher} • ${s.note}</div>
+                            </div>
+                            <div class="font-mono font-bold ${scoreClass}">
+                                ${scoreSign}${s.growth}
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += item;
+                });
+            };
+            renderList('high-flyers-list', data.students.highFlyers, true);
+            renderList('intervention-list', data.students.intervention, false);
+
+            // 6. Recommendations
+            const recContainer = document.getElementById('recommendations-container');
+            recContainer.innerHTML = '';
+            data.recommendations.forEach(rec => {
+                const card = `
+                    <div class="bg-white p-6 border border-gray-200 border-t-4 border-[#C5A983] shadow-sm">
+                        <h4 class="font-bold text-[#0C1C2E] mb-3 font-serif">${rec.title}</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">${rec.text}</p>
+                    </div>
+                `;
+                recContainer.innerHTML += card;
+            });
         }
 
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', handleNavigation);
-        });
+        // --- EVENT HANDLING ---
 
-        // --- INITIAL LOAD ---
-        renderDashboard();
+        function switchTab(tab) {
+            const readingBtn = document.getElementById('btn-reading');
+            const mathBtn = document.getElementById('btn-math');
+            
+            // Toggle Button Styles
+            if (tab === 'reading') {
+                readingBtn.className = "gs-btn-active px-6 py-2 text-sm font-medium transition-all border-r border-white/20 first:rounded-l-sm";
+                mathBtn.className = "gs-btn-inactive px-6 py-2 text-sm font-medium transition-all last:rounded-r-sm";
+                renderDashboard(READING_DATA);
+            } else {
+                mathBtn.className = "gs-btn-active px-6 py-2 text-sm font-medium transition-all last:rounded-r-sm";
+                readingBtn.className = "gs-btn-inactive px-6 py-2 text-sm font-medium transition-all border-r border-gray-200 first:rounded-l-sm";
+                renderDashboard(MATH_DATA);
+            }
+            
+            // Re-initialize icons
+            lucide.createIcons();
+        }
+
+        // Initial Render
+        document.addEventListener('DOMContentLoaded', () => {
+            switchTab('reading');
+        });
 
     </script>
 </body>
