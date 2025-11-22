@@ -123,7 +123,7 @@
             <!-- Risk -->
             <div class="gs-card p-5 border-t-red-600">
                 <div class="flex justify-between items-start mb-2">
-                    <span class="text-xs font-bold uppercase tracking-widest text-gray-500">Risk Exposure</span>
+                    <span class="text-xs font-bold uppercase tracking-widest text-gray-500">Regression Alert</span>
                     <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600"></i>
                 </div>
                 <div class="text-4xl font-serif text-red-700 mb-1" id="summary-stagnation">--%</div>
@@ -147,12 +147,12 @@
             <!-- Left Column: Domain Analysis -->
             <div class="lg:col-span-1">
                 <div class="bg-white p-6 border border-gray-200 shadow-sm h-full">
-                    <h3 class="text-lg font-bold text-[#0C1C2E] mb-6 pb-2 border-b border-gray-100">Sector Performance</h3>
+                    <h3 class="text-lg font-bold text-[#0C1C2E] mb-6 pb-2 border-b border-gray-100">Domain Proficiency</h3>
                     <div id="domain-container" class="space-y-6">
                         <!-- Domain bars injected here -->
                     </div>
                     <div class="mt-8 p-4 bg-gray-50 border-l-4 border-[#C5A983] text-sm text-gray-700 italic">
-                        "Strategic focus required on underperforming sectors to rebalance overall portfolio growth."
+                        "Instructional focus required on underperforming domains to ensure comprehensive mastery."
                     </div>
                 </div>
             </div>
@@ -161,7 +161,7 @@
             <div class="lg:col-span-2">
                 <div class="bg-white border border-gray-200 shadow-sm">
                     <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 class="text-lg font-bold text-[#0C1C2E]">Cohort Performance Matrix</h3>
+                        <h3 class="text-lg font-bold text-[#0C1C2E]">Classroom Performance Matrix</h3>
                         <span class="text-xs uppercase bg-gray-100 px-2 py-1 rounded text-gray-600">YTD Data</span>
                     </div>
                     <div class="overflow-x-auto">
@@ -173,7 +173,7 @@
                                     <th class="p-4">Proficiency</th>
                                     <th class="p-4">Growth Target</th>
                                     <th class="p-4 text-red-700">Regression</th>
-                                    <th class="p-4">Rating</th>
+                                    <th class="p-4">Status</th>
                                 </tr>
                             </thead>
                             <tbody id="teacher-table-body" class="divide-y divide-gray-100">
@@ -190,7 +190,7 @@
             <!-- High Performers -->
             <div class="bg-white border border-gray-200">
                 <div class="p-4 border-b border-gray-200 bg-green-50/50 flex justify-between items-center">
-                    <h3 class="font-bold text-green-900 font-serif">Top Equity Performers</h3>
+                    <h3 class="font-bold text-green-900 font-serif">High Growth Students</h3>
                     <i data-lucide="trending-up" class="w-4 h-4 text-green-700"></i>
                 </div>
                 <div class="p-0 max-h-80 overflow-y-auto" id="high-flyers-list">
@@ -201,7 +201,7 @@
             <!-- Watch List -->
             <div class="bg-white border border-gray-200">
                 <div class="p-4 border-b border-gray-200 bg-red-50/50 flex justify-between items-center">
-                    <h3 class="font-bold text-red-900 font-serif">Critical Watch List</h3>
+                    <h3 class="font-bold text-red-900 font-serif">Intervention Watch List</h3>
                     <i data-lucide="alert-octagon" class="w-4 h-4 text-red-700"></i>
                 </div>
                 <div class="p-0 max-h-80 overflow-y-auto" id="intervention-list">
@@ -212,7 +212,7 @@
 
         <!-- Strategic Recommendations -->
         <div class="mb-12">
-            <h3 class="text-xl font-bold text-[#0C1C2E] mb-4 font-serif">Forward Guidance & Strategy</h3>
+            <h3 class="text-xl font-bold text-[#0C1C2E] mb-4 font-serif">Strategic Action Plan</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="recommendations-container">
                 <!-- Recommendations injected here -->
             </div>
@@ -248,24 +248,24 @@
                     grade: "Grade 3",
                     analysis: "High variance between cohorts.",
                     teachers: [
-                        { name: "Doong", students: 23, proficient: 21.7, metGrowth: 69.6, regression: 4.3, status: "Strong Buy / Exemplary" },
-                        { name: "Griffin", students: 24, proficient: 12.5, metGrowth: 12.5, regression: 66.7, status: "Underperform" }
+                        { name: "Doong", students: 23, proficient: 21.7, metGrowth: 69.6, regression: 4.3, status: "Exemplary Model" },
+                        { name: "Griffin", students: 24, proficient: 12.5, metGrowth: 12.5, regression: 66.7, status: "Critical Support Needed" }
                     ]
                 },
                 {
                     grade: "Grade 4",
                     analysis: "Stable but low growth velocity.",
                     teachers: [
-                        { name: "Sheiring", students: 26, proficient: 11.5, metGrowth: 34.6, regression: 23.1, status: "Neutral" },
-                        { name: "Sutter", students: 24, proficient: 12.5, metGrowth: 33.3, regression: 20.8, status: "Neutral" }
+                        { name: "Sheiring", students: 26, proficient: 11.5, metGrowth: 34.6, regression: 23.1, status: "Monitoring" },
+                        { name: "Sutter", students: 24, proficient: 12.5, metGrowth: 33.3, regression: 20.8, status: "Monitoring" }
                     ]
                 },
                 {
                     grade: "Grade 5",
-                    analysis: "Significant downside risk detected.",
+                    analysis: "Significant regression detected.",
                     teachers: [
-                        { name: "Long", students: 29, proficient: 10.3, metGrowth: 17.2, regression: 44.8, status: "Sell / Concern" },
-                        { name: "Lopez", students: 15, proficient: 0.0, metGrowth: 20.0, regression: 40.0, status: "Incomplete Data" }
+                        { name: "Long", students: 29, proficient: 10.3, metGrowth: 17.2, regression: 44.8, status: "Intervention Required" },
+                        { name: "Lopez", students: 15, proficient: 0.0, metGrowth: 20.0, regression: 40.0, status: "Data Incomplete" }
                     ]
                 }
             ],
@@ -289,8 +289,8 @@
             },
             recommendations: [
                 { title: "Compliance Audit (Lopez)", text: "Immediate makeup testing required for 10 missing students. Current dataset is statistically invalid without full roster." },
-                { title: "Validity Check (Griffin)", text: "67% regression is a statistical anomaly. Investigate testing environment integrity immediately." },
-                { title: "Strategy Replication (Doong)", text: "Institutionalize phonics interventions used in this cohort. Create playbook for Grade 5 implementation." }
+                { title: "Validity Check (Griffin)", text: "67% regression is a statistical anomaly. Perhaps investigate testing environment integrity." },
+                { title: "Differentiatation (General)", text: "Try using iReady's instructional grouping to differentiate content for struggling students. Try increasing student movement, voice, reflection and feedback." }
             ]
         };
 
@@ -313,17 +313,17 @@
             grades: [
                 {
                     grade: "Grade 3",
-                    analysis: "Strongest growth engine in the portfolio.",
+                    analysis: "Strongest growth engine in the school.",
                     teachers: [
-                        { name: "Doong", students: 23, proficient: 30.4, metGrowth: 17.4, regression: 0.0, status: "Strong Buy / Exemplary" },
-                        { name: "Griffin", students: 24, proficient: 20.8, metGrowth: 29.2, regression: 25.0, status: "High Volatility" }
+                        { name: "Doong", students: 23, proficient: 30.4, metGrowth: 17.4, regression: 0.0, status: "Exemplary Model" },
+                        { name: "Griffin", students: 24, proficient: 20.8, metGrowth: 29.2, regression: 25.0, status: "High Variance" }
                     ]
                 },
                 {
                     grade: "Grade 4",
                     analysis: "Instructional interference causing drag.",
                     teachers: [
-                        { name: "Sheiring", students: 26, proficient: 34.6, metGrowth: 19.2, regression: 26.9, status: "Neutral" },
+                        { name: "Sheiring", students: 26, proficient: 34.6, metGrowth: 19.2, regression: 26.9, status: "Monitoring" },
                         { name: "Sutter", students: 24, proficient: 37.5, metGrowth: 12.5, regression: 29.2, status: "Stagnant" }
                     ]
                 },
@@ -331,8 +331,8 @@
                     grade: "Grade 5",
                     analysis: "Retention failure in Unit 2 material.",
                     teachers: [
-                        { name: "Long", students: 29, proficient: 34.5, metGrowth: 20.7, regression: 27.6, status: "Hold" },
-                        { name: "Lopez", students: 25, proficient: 20.0, metGrowth: 12.0, regression: 36.0, status: "Sell / Critical" }
+                        { name: "Long", students: 29, proficient: 34.5, metGrowth: 20.7, regression: 27.6, status: "Concern" },
+                        { name: "Lopez", students: 25, proficient: 20.0, metGrowth: 12.0, regression: 36.0, status: "Critical Support Needed" }
                     ]
                 }
             ],
@@ -352,9 +352,9 @@
                 ]
             },
             recommendations: [
-                { title: "Curriculum Bridge (Grade 5)", text: "Pause Unit 3. Implement 1-week liquidity bridge (money models) to reteach Fraction-Decimal conversion." },
-                { title: "Fluency Hedge (Grade 4)", text: "Integrate 'Area Model' multiplication daily to prevent depreciation of Unit 2 skills." },
-                { title: "Management Restructure (Lopez)", text: "Cohort requires instructional coach to co-plan. Current strategy is not yielding ROI." }
+                { title: "Curriculum Bridge (Grade 5)", text: "Pause Unit 3. Implement 1-week conceptual bridge (money models) to reteach Fraction-Decimal conversion." },
+                { title: "Fluency Maintenance (Grade 4)", text: "Integrate 'Area Model' multiplication daily to prevent skill regression in Unit 2 material." },
+                { title: "Instructional Coaching (Lopez)", text: "Cohort requires instructional coach to co-plan. Current strategy is not yielding learning impact." }
             ]
         };
 
@@ -416,8 +416,8 @@
                 grade.teachers.forEach(teacher => {
                     // Determine status color
                     let statusClass = "text-gray-500";
-                    if (teacher.status.includes("Exemplary") || teacher.status.includes("Strong Buy")) statusClass = "text-green-700 font-bold";
-                    if (teacher.status.includes("Critical") || teacher.status.includes("Sell")) statusClass = "text-red-700 font-bold";
+                    if (teacher.status.includes("Exemplary") || teacher.status.includes("Strong")) statusClass = "text-green-700 font-bold";
+                    if (teacher.status.includes("Critical") || teacher.status.includes("Intervention") || teacher.status.includes("Support")) statusClass = "text-red-700 font-bold";
 
                     const row = `
                         <tr class="hover:bg-blue-50 transition-colors">
